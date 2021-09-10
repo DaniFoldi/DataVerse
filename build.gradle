@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+}
+
+group 'com.danifoldi'
+version '0.0.1-BETA'
+
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
+
+repositories {
+    mavenCentral()
+    google()
+    maven { url 'https://papermc.io/repo/repository/maven-public/' }
+}
+
+dependencies {
+    compileOnly 'io.github.waterfallmc:waterfall-api:1.17-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
+
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'com.google.dagger:dagger:2.38.1'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.38.1'
+}
+
+processResources {
+    from('src/main/resources') {
+        expand(version: project.version)
+        duplicatesStrategy(DuplicatesStrategy.INCLUDE)
+    }
+}
+
+shadowJar {
+    minimize()
+    // todo relocates
+
+    getArchiveFileName().set("${project.name}-${project.version}.jar")
+}
