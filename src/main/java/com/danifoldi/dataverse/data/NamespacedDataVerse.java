@@ -1,8 +1,8 @@
 package com.danifoldi.dataverse.data;
 
-public class NamespacedDataVerse<Class> {
+public class NamespacedDataVerse<T> {
 
-    public <Class> NamespacedDataVerse(String key, Class clazz) {
+    public NamespacedDataVerse(String key, Class<T> clazz) {
 
     }
 }
