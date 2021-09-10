@@ -1,0 +1,8 @@
+api-version: 1.13
+authors:
+  - DaniFoldi
+  - HgeX
+description: DataVerse is an API plugin that manages data storage on many platforms.
+main: com.danifoldi.dataverse.platform.bukkit.DataVersePlugin
+name: DataVerse
+version: ${version}

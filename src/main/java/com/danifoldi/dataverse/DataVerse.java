@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DataVerse {
 
-    public @NotNull NamespacedDataVerse<?> getNamespacedDataStore(final @NotNull Namespaced namespaced,
+    public @NotNull NamespacedDataVerse<@NotNull ?> getNamespacedDataStore(final @NotNull Namespaced namespaced,
                                                                   final @NotNull String name) {
         final String key = String.format("%s:%s", namespaced.getNamespace(), namespaced);
     }
