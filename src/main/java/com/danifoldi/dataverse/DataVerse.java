@@ -15,7 +15,7 @@ public class DataVerse {
 
     @Inject
     public DataVerse(final @NotNull DataVerseCache cache) {
-        
+
         this.cache = cache;
     }
 
