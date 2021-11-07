@@ -26,6 +26,7 @@ public class DataVersePlugin extends Plugin implements Namespaced {
     public void onDisable() {
 
         if (closeDatabaseEngineConnection != null) {
+
             closeDatabaseEngineConnection.run();
         }
     }

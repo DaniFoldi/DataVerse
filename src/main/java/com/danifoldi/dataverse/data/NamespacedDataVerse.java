@@ -30,6 +30,7 @@ public abstract class NamespacedDataVerse<T> implements NamespacedStorage<T> {
         T t = instanceSupplier.get();
 
         for (final Field field : t.getClass().getDeclaredFields()) {
+
             field.setAccessible(true);
             final Type type = field.getType();
             final TypeToken<?> typeToken = TypeToken.get(type);

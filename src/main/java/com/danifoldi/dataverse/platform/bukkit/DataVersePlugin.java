@@ -33,13 +33,16 @@ public class DataVersePlugin extends JavaPlugin implements Namespaced {
         DataVerse
                 .getDataVerse()
                 .getNamespacedDataVerse(this, "test", UserAccount::new)
-                .create(UUID.randomUUID().toString(), new UserAccount());
+                .create(UUID.randomUUID(), new UserAccount()).thenAccept(ndv -> {
+                    ndv.create(UUID.randomUUID(), new UserAccount());
+        });
     }
 
     @Override
     public void onDisable() {
 
         if (closeDatabaseEngineConnection != null) {
+
             closeDatabaseEngineConnection.run();
         }
     }

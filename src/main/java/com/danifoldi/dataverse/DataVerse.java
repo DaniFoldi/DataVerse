@@ -16,19 +16,22 @@ import java.util.function.Supplier;
 
 public class DataVerse {
 
-    private final Map<String, NamespacedDataVerse<?>> cache = new ConcurrentHashMap<>();
-    private DatabaseEngine databaseEngine = null;
-    private StorageType storageType;
+    private final @NotNull Map<@NotNull String, @NotNull NamespacedDataVerse<?>> cache = new ConcurrentHashMap<>();
+    private @Nullable DatabaseEngine databaseEngine = null;
+    private @Nullable StorageType storageType;
 
     private DataVerse() {
 
     }
 
     private void setup(StorageType storageType, Map<String, String> config) {
+
         this.storageType = storageType;
 
         switch (storageType) {
+
             case MEMORY -> {
+
                 databaseEngine = new MemoryDatabaseEngine();
                 databaseEngine.connect(config);
             }
@@ -50,6 +53,7 @@ public class DataVerse {
     private <T> @NotNull NamespacedDataVerse<@NotNull T> createNamespacedDataVerse(String namespace, Supplier<T> instanceSupplier) {
 
         return switch (storageType) {
+
             case MEMORY -> new MemoryDataVerse<>((MemoryDatabaseEngine)databaseEngine, namespace, instanceSupplier);
             case MYSQL -> null;
             case SQLITE -> null;
@@ -66,7 +70,7 @@ public class DataVerse {
         cache.clear();
     }
 
-    private static DataVerse instance;
+    private static @Nullable DataVerse instance;
 
     public static @Nullable DataVerse getDataVerse() {
 
@@ -74,16 +78,24 @@ public class DataVerse {
     }
 
     public static @NotNull CompletableFuture<@NotNull Runnable> setInstance(final @NotNull StorageType storageType,
-                                                                        final @NotNull Map<@NotNull String, @NotNull String> config) {
+                                                                            final @NotNull Map<@NotNull String, @NotNull String> config) {
 
         if (instance != null) {
+
             return CompletableFuture.failedFuture(new IllegalStateException("DataVerse instance has already been set."));
         }
 
         return CompletableFuture.supplyAsync(() -> {
+
             instance = new DataVerse();
             instance.setup(storageType, config);
-            return () -> instance.databaseEngine.close();
+            return () -> {
+
+                if (instance.databaseEngine != null) {
+
+                    instance.databaseEngine.close();
+                }
+            };
         });
     }
 }

@@ -1,12 +1,13 @@
 package com.danifoldi.dataverse.database;
 
 public enum StorageType {
-    MYSQL,
-    SQLITE,
-    MARIADB,
-    H2,
-    REDIS,
-    MONGODB,
+
+    MEMORY,
     FILE,
-    MEMORY
+    SQLITE,
+    H2,
+    MYSQL,
+    MARIADB,
+    MONGODB,
+    REDIS
 }

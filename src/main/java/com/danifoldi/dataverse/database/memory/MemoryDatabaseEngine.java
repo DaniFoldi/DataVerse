@@ -4,12 +4,13 @@ import com.danifoldi.dataverse.database.DatabaseEngine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MemoryDatabaseEngine implements DatabaseEngine {
 
-    private final @NotNull Map<@NotNull String, @NotNull Map<@NotNull String, @Nullable Object>> storage = new ConcurrentHashMap<>();
+    private final @NotNull Map<@NotNull String, @NotNull Map<@NotNull String, @NotNull Object>> storage = new ConcurrentHashMap<>();
 
     @Override
     public void connect(@NotNull Map<@NotNull String, @NotNull String> config) {
@@ -25,6 +26,11 @@ public class MemoryDatabaseEngine implements DatabaseEngine {
     @Nullable Object getValue(String namespace, String key) {
 
         return storage.get(namespace).get(key);
+    }
+
+    @NotNull Collection<@NotNull String> listKeys(String namespace) {
+
+        return storage.get(namespace).keySet();
     }
 
     void createValue(String namespace, String key, Object value) {

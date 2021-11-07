@@ -1,5 +1,6 @@
 package com.danifoldi.dataverse.data;
 
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -13,6 +14,8 @@ public interface NamespacedStorage<T> {
     CompletableFuture<NamespacedStorage<T>> create(String key, T value);
 
     CompletableFuture<T> get(String key);
+
+    CompletableFuture<Collection<String>> list();
 
     default CompletableFuture<NamespacedStorage<T>> createOrUpdate(String key, T value) {
 
