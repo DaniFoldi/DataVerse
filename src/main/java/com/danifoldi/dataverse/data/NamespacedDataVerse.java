@@ -11,13 +11,12 @@ import java.util.function.Supplier;
 
 public abstract class NamespacedDataVerse<T> implements NamespacedStorage<T> {
 
-    private final @NotNull String namespace;
-    private final @NotNull Supplier<@NotNull T> instanceSupplier;
-
-    private final @NotNull Map<@NotNull String, @NotNull FieldSpec> fieldMap = new ConcurrentHashMap<>();
+    protected final @NotNull String namespace;
+    protected final @NotNull Supplier<@NotNull T> instanceSupplier;
+    protected final @NotNull Map<@NotNull String, @NotNull FieldSpec> fieldMap = new ConcurrentHashMap<>();
 
     public NamespacedDataVerse(final @NotNull String namespace,
-                               final @NotNull Supplier<T> instanceSupplier) { // Could replace instancesupplier to Class<T>, right?
+                               final @NotNull Supplier<@NotNull T> instanceSupplier) { // Could replace instancesupplier to Class<T>, right?
 
         this.namespace = namespace;
         this.instanceSupplier = instanceSupplier;
