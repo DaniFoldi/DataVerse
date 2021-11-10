@@ -6,6 +6,8 @@ import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.danifoldi.dataverse.database.StorageType;
 import com.danifoldi.dataverse.database.memory.MemoryDataVerse;
 import com.danifoldi.dataverse.database.memory.MemoryDatabaseEngine;
+import com.danifoldi.dataverse.database.mysql.MySQLDataVerse;
+import com.danifoldi.dataverse.database.mysql.MySQLDatabaseEngine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +37,11 @@ public class DataVerse {
                 databaseEngine = new MemoryDatabaseEngine();
                 databaseEngine.connect(config);
             }
+            case MYSQL -> {
+
+                databaseEngine = new MySQLDatabaseEngine();
+                databaseEngine.connect(config);
+            }
         }
     }
 
@@ -55,13 +62,8 @@ public class DataVerse {
         return switch (storageType) {
 
             case MEMORY -> new MemoryDataVerse<>((MemoryDatabaseEngine)databaseEngine, namespace, instanceSupplier);
-            case MYSQL -> null;
-            case SQLITE -> null;
-            case MARIADB -> null;
-            case H2 -> null;
-            case REDIS -> null;
-            case MONGODB -> null;
-            case FILE -> null;
+            case MYSQL -> new MySQLDataVerse<>((MySQLDatabaseEngine)databaseEngine, namespace, instanceSupplier);
+            default -> null;
         };
     }
 
@@ -82,6 +84,7 @@ public class DataVerse {
 
         if (instance != null) {
 
+            // todo warn
             return CompletableFuture.failedFuture(new IllegalStateException("DataVerse instance has already been set."));
         }
 
