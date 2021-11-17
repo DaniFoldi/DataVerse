@@ -1,8 +1,8 @@
 package com.danifoldi.dataverse.database.memory;
 
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
-import com.danifoldi.dataverse.data.NamespacedStorage;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -21,34 +21,35 @@ public class MemoryDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
-    public CompletableFuture<NamespacedStorage<T>> create(String key, T value) {
+    public @NotNull CompletableFuture<@NotNull Boolean> create(String key, T value) {
 
         databaseEngine.createValue(namespace, key, value);
-        return CompletableFuture.supplyAsync(() -> this);
+        return CompletableFuture.supplyAsync(() -> true);
     }
 
     @Override
-    public CompletableFuture<T> get(String key) {
+    public @NotNull CompletableFuture<@Nullable T> get(String key) {
 
         return CompletableFuture.supplyAsync(() -> (T)databaseEngine.getValue(namespace, key));
     }
 
     @Override
-    public CompletableFuture<Collection<String>> list() {
+    public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> list() {
+
         return CompletableFuture.supplyAsync(() -> databaseEngine.listKeys(namespace));
     }
 
     @Override
-    public CompletableFuture<NamespacedStorage<T>> update(String key, T value) {
+    public @NotNull CompletableFuture<@NotNull Boolean> update(String key, T value) {
 
         databaseEngine.updateValue(namespace, key, value);
-        return CompletableFuture.supplyAsync(() -> this);
+        return CompletableFuture.supplyAsync(() -> true);
     }
 
     @Override
-    public CompletableFuture<NamespacedStorage<T>> delete(String key) {
+    public @NotNull CompletableFuture<@NotNull Boolean> delete(String key) {
 
         databaseEngine.deleteValue(namespace, key);
-        return CompletableFuture.supplyAsync(() -> this);
+        return CompletableFuture.supplyAsync(() -> true);
     }
 }

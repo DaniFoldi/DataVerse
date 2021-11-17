@@ -67,7 +67,7 @@ public class DataVerse {
         };
     }
 
-    public void clearCache() {
+    private void clearCache() {
 
         cache.clear();
     }

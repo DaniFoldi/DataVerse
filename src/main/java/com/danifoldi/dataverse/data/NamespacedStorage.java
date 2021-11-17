@@ -1,59 +1,62 @@
 package com.danifoldi.dataverse.data;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface NamespacedStorage<T> {
 
-    default CompletableFuture<Boolean> exists(String key) {
+    default @NotNull CompletableFuture<@NotNull Boolean> exists(final @NotNull String key) {
 
         return CompletableFuture.supplyAsync(() -> get(key).join() != null);
     };
 
-    CompletableFuture<NamespacedStorage<T>> create(String key, T value);
+    @NotNull CompletableFuture<@NotNull Boolean> create(String key, T value);
 
-    CompletableFuture<T> get(String key);
+    @NotNull CompletableFuture<@Nullable T> get(String key);
 
-    CompletableFuture<Collection<String>> list();
+    @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> list();
 
-    default CompletableFuture<NamespacedStorage<T>> createOrUpdate(String key, T value) {
+    default @NotNull CompletableFuture<@NotNull Boolean> createOrUpdate(String key, T value) {
 
         return exists(key).thenCompose(exists -> exists ? update(key, value) : create(key, value));
     }
 
-    CompletableFuture<NamespacedStorage<T>> update(String key, T value);
+    @NotNull CompletableFuture<@NotNull Boolean> update(String key, T value);
 
-    CompletableFuture<NamespacedStorage<T>> delete(String key);
+    @NotNull CompletableFuture<@NotNull Boolean> delete(String key);
 
 
 
-    default CompletableFuture<Boolean> exists(UUID key) {
+    default @NotNull CompletableFuture<@NotNull Boolean> exists(UUID key) {
 
         return exists(key.toString());
     }
 
-    default CompletableFuture<NamespacedStorage<T>> create(UUID key, T value) {
+    default @NotNull CompletableFuture<Boolean> create(UUID key, T value) {
 
         return create(key.toString(), value);
     }
 
-    default CompletableFuture<T> get(UUID key) {
+    default @NotNull CompletableFuture<@Nullable T> get(UUID key) {
 
         return get(key.toString());
     }
 
-    default CompletableFuture<NamespacedStorage<T>> createOrUpdate(UUID key, T value) {
+    default @NotNull CompletableFuture<@NotNull Boolean> createOrUpdate(UUID key, T value) {
 
         return createOrUpdate(key.toString(), value);
     }
 
-    default CompletableFuture<NamespacedStorage<T>> update(UUID key, T value) {
+    default @NotNull CompletableFuture<@NotNull Boolean> update(UUID key, T value) {
 
         return update(key.toString(), value);
     }
 
-    default CompletableFuture<NamespacedStorage<T>> delete(UUID key) {
+    default @NotNull CompletableFuture<@NotNull Boolean> delete(UUID key) {
 
         return delete(key.toString());
     }
