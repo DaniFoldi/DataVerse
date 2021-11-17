@@ -4,14 +4,26 @@ import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.pool.HikariPool;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.ParameterizedType;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.spi.AbstractResourceBundleProvider;
 
 public class MySQLDatabaseEngine implements DatabaseEngine {
 
@@ -116,9 +128,9 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
     }
 
     @SuppressWarnings("unchecked")
-    private String columnType(FieldSpec spec) {
+    private static<T> String columnType(Class<T> clazz) {
 
-        String typeName = spec.reflect().getDeclaringClass().getName();
+        String typeName = clazz.getName();
         return switch (typeName) {
 
             case "java.lang.String" -> "VARCHAR(2048) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
@@ -138,7 +150,10 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             case "java.util.List" ->
 
                     // todo list generic data
-                    // ((Class)(((ParameterizedType)(spec.reflect().getDeclaringClass().getGenericSuperclass())).getActualTypeArguments()[0])).getTypeName();
+                    "JSON";
+            case "java.util.Map" ->
+
+                    // todo list generic data
                     "JSON";
             default ->
 
@@ -148,10 +163,74 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
     }
 
+    private static<T> String customDatatype(Class<T> clazz, T value) {
+        switch (clazz.getName()) {
+            case "org.bukkit.Location" -> {
+                Location l = (Location)value;
+                return l.getWorld().getName() + "," + l.getX() + "," + l.getY() + "," + l.getZ() + "," + l.getPitch() + "," + l.getYaw();
+            }
+            case "org.bukkit.Material" -> {
+                Material m = (Material)value;
+                return m.name();
+            }
+            case "org.bukkit.ItemStack" -> {
+                ItemStack i = (ItemStack)value;
+                YamlConfiguration config = new YamlConfiguration();
+                config.set("i", i);
+                return config.saveToString();
+            }
+        }
+
+        // todo throw
+        return null;
+    }
+
+    private void setStatementValues(PreparedStatement statement, Object value, Map<String, FieldSpec> fieldMap) {
+
+        AtomicInteger i = new AtomicInteger(1);
+        fieldMap.forEach((name, spec) -> {
+
+            try {
+
+                String typeName = spec.reflect().getName();
+                switch (typeName) {
+
+                    case "java.lang.String" -> statement.setString(i.getAndIncrement(), (String)spec.reflect().get(value));
+                    case "int", "java.lang.Integer" -> statement.setInt(i.getAndIncrement(), (Integer)spec.reflect().get(value));
+                    case "byte", "java.lang.Byte" -> statement.setByte(i.getAndIncrement(), (Byte)spec.reflect().get(value));
+                    case "long", "java.lang.Long" -> statement.setLong(i.getAndIncrement(), (Long)spec.reflect().get(value));
+                    case "short", "java.lang.Short" -> statement.setShort(i.getAndIncrement(), (Short)spec.reflect().get(value));
+                    case "float", "java.lang.Float" -> statement.setFloat(i.getAndIncrement(), (Float)spec.reflect().get(value));
+                    case "double", "java.lang.Double" -> statement.setDouble(i.getAndIncrement(), (Double)spec.reflect().get(value));
+                    case "boolean", "java.lang.Boolean" -> statement.setBoolean(i.getAndIncrement(), (Boolean)spec.reflect().get(value));
+                    case "char", "java.lang.Char" -> statement.setString(i.getAndIncrement(), String.valueOf(spec.reflect().get(value)));
+                    case "org.bukkit.Location" -> statement.setString(i.getAndIncrement(), customDatatype(Location.class, (Location)spec.reflect().get(value)));
+                    case "org.bukkit.Material" -> statement.setString(i.getAndIncrement(), customDatatype(Material.class, (Material)spec.reflect().get(value)));
+                    case "org.bukkit.ItemStack" -> statement.setString(i.getAndIncrement(), customDatatype(ItemStack.class, (ItemStack)spec.reflect().get(value)));
+                    case "java.math.BigDecimal" -> statement.setBigDecimal(i.getAndIncrement(), (BigDecimal)spec.reflect().get(value));
+                    case "java.util.UUID" -> statement.setString(i.getAndIncrement(), spec.reflect().get(value).toString());
+                    case "java.util.List" -> {}
+
+                            // todo list generic data
+                    case "java.util.Map" -> {}
+
+                            // todo list generic data
+                    default -> {}
+
+                            // todo throw
+                }
+            } catch (SQLException | ReflectiveOperationException e) {
+
+                // todo throw
+                e.printStackTrace();
+            }
+        });
+    }
+
     void createTable(String namespace, Map<String, FieldSpec> fieldMap) {
 
         StringBuilder columns = new StringBuilder();
-        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), columnType(spec))));
+        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), columnType(spec.reflect().getDeclaringClass()))));
 
         try (final @NotNull Connection connection = connectionPool.getConnection();
              final @NotNull PreparedStatement statement = connection.prepareStatement("""
@@ -182,7 +261,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
         return CompletableFuture.supplyAsync(() -> {
 
             StringBuilder columns = new StringBuilder();
-            fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), columnType(spec))));
+            fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), columnType(spec.reflect().getDeclaringClass()))));
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
                  final @NotNull PreparedStatement statement = connection.prepareStatement("""
@@ -190,6 +269,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                     (%s, %s) VALUES (%s, %s);
              """.formatted(tableName(namespace), columnName("key"), columns.toString(), key, "? ".repeat(fieldMap.size())))) {
 
+                setStatementValues(statement, value, fieldMap);
                 statement.execute();
                 return true;
             } catch (SQLException e) {
