@@ -3,7 +3,7 @@ package com.danifoldi.dataverse.platform.velocity;
 import com.danifoldi.dataverse.DataVerse;
 import com.danifoldi.dataverse.data.Namespaced;
 import com.danifoldi.dataverse.database.StorageType;
-import com.google.inject.Inject;
+import com.danifoldi.dataverse.translation.TranslationEngine;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -15,7 +15,7 @@ import java.util.Collections;
 
 @Plugin(id = "dataverse",
         name = "Dataverse",
-        version = "0.0.2-SNAPSHOT",
+        version = "@version@",
         description = "DataVerse is an API plugin that manages data storage on many platforms.",
         authors={"DaniFoldi", "Hgex"})
 public class DataVersePlugin implements Namespaced {
