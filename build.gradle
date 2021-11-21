@@ -27,7 +27,12 @@ dependencies {
 
     // db connectors
     implementation 'com.danifoldi:DML:0.0.3'
-    implementation 'com.zaxxer:HikariCP:5.0.0'
+    implementation ('com.zaxxer:HikariCP:5.0.0') {
+        exclude module: 'slf4j-api'
+    }
+    implementation 'org.mariadb.jdbc:mariadb-java-client:2.7.4'
+    implementation 'org.mongodb:mongo-java-driver:3.12.10'
+    implementation 'mysql:mysql-connector-java:5.1.37'
 
     // inject system
     implementation 'javax.inject:javax.inject:1'
@@ -51,8 +56,16 @@ blossom {
 }
 
 shadowJar {
-    minimize()
-    // todo relocates
+    //minimize()
+
+    relocate 'com.zaxxer.hikari', 'com.danifoldi.dataverse.lib.hikari'
+    relocate 'com.danifoldi.dml', 'com.danifoldi.dataverse.lib.dml'
+    relocate 'org.mariadb', 'com.danifoldi.dataverse.lib.mariadb'
+    relocate 'com.mongodb', 'com.danifoldi.dataverse.lib.mongodb'
+    relocate 'com.mysql', 'com.danifoldi.dataverse.lib.mysql'
+    relocate 'org.bson', 'com.danifoldi.dataverse.lib.bson'
+    relocate 'javax.inject', 'com.danifoldi.dataverse.lib.inject'
+    relocate 'dagger', 'com.danifoldi.dataverse.lib.dagger'
 
     getArchiveFileName().set("${project.name}-${project.version}.jar")
 }

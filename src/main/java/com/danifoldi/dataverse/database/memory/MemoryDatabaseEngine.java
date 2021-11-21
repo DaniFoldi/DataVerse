@@ -1,6 +1,7 @@
 package com.danifoldi.dataverse.database.memory;
 
 import com.danifoldi.dataverse.database.DatabaseEngine;
+import com.danifoldi.dataverse.translation.TranslationEngine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +14,7 @@ public class MemoryDatabaseEngine implements DatabaseEngine {
     private final @NotNull Map<@NotNull String, @NotNull Map<@NotNull String, @NotNull Object>> storage = new ConcurrentHashMap<>();
 
     @Override
-    public void connect(@NotNull Map<@NotNull String, @NotNull String> config) {
+    public void connect(@NotNull Map<@NotNull String, @NotNull String> config, @NotNull TranslationEngine translationEngine) {
 
         storage.clear();
     }

@@ -1,13 +1,9 @@
 package com.danifoldi.dataverse.database.mysql;
 
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
-import com.danifoldi.dataverse.data.NamespacedStorage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -39,21 +35,21 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
 
     @Override
     public @NotNull CompletableFuture<@Nullable T> get(String key) {
-        return null;
+        return databaseEngine.get(namespace, key, instanceSupplier.get(), fieldMap);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> list() {
-        return null;
+        return databaseEngine.list(namespace);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull Boolean> update(String key, T value) {
-        return null;
+        return databaseEngine.update(namespace, key, value, fieldMap);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull Boolean> delete(String key) {
-        return null;
+        return databaseEngine.delete(namespace, key);
     }
 }

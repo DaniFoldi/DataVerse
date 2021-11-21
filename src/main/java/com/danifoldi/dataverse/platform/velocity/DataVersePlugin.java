@@ -2,16 +2,16 @@ package com.danifoldi.dataverse.platform.velocity;
 
 import com.danifoldi.dataverse.DataVerse;
 import com.danifoldi.dataverse.data.Namespaced;
-import com.danifoldi.dataverse.database.StorageType;
-import com.danifoldi.dataverse.translation.TranslationEngine;
+import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
+import java.nio.file.Path;
 
 @Plugin(id = "dataverse",
         name = "Dataverse",
@@ -21,12 +21,19 @@ import java.util.Collections;
 public class DataVersePlugin implements Namespaced {
 
     private @Nullable Runnable closeDatabaseEngineConnection;
+    private @NotNull Path datafolder;
+
+    @Inject
+    public DataVersePlugin(final @DataDirectory @NotNull Path datafolder) {
+
+        this.datafolder = datafolder;
+    }
 
     @Subscribe
     public void onInitialize(ProxyInitializeEvent event) {
 
         DataVerse
-                .setInstance(StorageType.MEMORY, Collections.emptyMap())
+                .setInstance(datafolder.resolve("config.dml"))
                 .thenAccept(action -> closeDatabaseEngineConnection = action);
     }
 

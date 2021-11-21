@@ -1,5 +1,6 @@
 package com.danifoldi.dataverse;
 
+import com.danifoldi.dataverse.config.Config;
 import com.danifoldi.dataverse.data.Namespaced;
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
 import com.danifoldi.dataverse.database.DatabaseEngine;
@@ -8,9 +9,13 @@ import com.danifoldi.dataverse.database.memory.MemoryDataVerse;
 import com.danifoldi.dataverse.database.memory.MemoryDatabaseEngine;
 import com.danifoldi.dataverse.database.mysql.MySQLDataVerse;
 import com.danifoldi.dataverse.database.mysql.MySQLDatabaseEngine;
+import com.danifoldi.dataverse.translation.TranslationEngine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,27 +25,28 @@ public class DataVerse {
 
     private final @NotNull Map<@NotNull String, @NotNull NamespacedDataVerse<?>> cache = new ConcurrentHashMap<>();
     private @Nullable DatabaseEngine databaseEngine = null;
+    private @NotNull TranslationEngine translationEngine = new TranslationEngine();
     private @Nullable StorageType storageType;
 
     private DataVerse() {
 
     }
 
-    private void setup(StorageType storageType, Map<String, String> config) {
+    private void setup(Map<String, String> config) {
 
-        this.storageType = storageType;
+        this.storageType = StorageType.valueOf(config.get("storage_type").toUpperCase(Locale.ROOT));
 
         switch (storageType) {
 
             case MEMORY -> {
 
                 databaseEngine = new MemoryDatabaseEngine();
-                databaseEngine.connect(config);
+                databaseEngine.connect(config, translationEngine);
             }
             case MYSQL -> {
 
                 databaseEngine = new MySQLDatabaseEngine();
-                databaseEngine.connect(config);
+                databaseEngine.connect(config, translationEngine);
             }
         }
     }
@@ -72,6 +78,11 @@ public class DataVerse {
         cache.clear();
     }
 
+    public @NotNull TranslationEngine getTranslationEngine() {
+
+        return translationEngine;
+    }
+
     private static @Nullable DataVerse instance;
 
     public static @Nullable DataVerse getDataVerse() {
@@ -79,8 +90,18 @@ public class DataVerse {
         return instance;
     }
 
-    public static @NotNull CompletableFuture<@NotNull Runnable> setInstance(final @NotNull StorageType storageType,
-                                                                            final @NotNull Map<@NotNull String, @NotNull String> config) {
+    public static @NotNull CompletableFuture<@NotNull Runnable> setInstance(final @NotNull Path configFile) {
+
+        try {
+
+            Config.ensureConfig(configFile);
+        } catch (IOException e) {
+
+            // todo throw
+            e.printStackTrace();
+        }
+
+        Map<String, String> config = Config.getConfig(configFile);
 
         if (instance != null) {
 
@@ -91,7 +112,10 @@ public class DataVerse {
         return CompletableFuture.supplyAsync(() -> {
 
             instance = new DataVerse();
-            instance.setup(storageType, config);
+            instance.setup(config);
+            instance.translationEngine.clear();
+            instance.translationEngine.setupStandard();
+            System.out.println("translationengine");
             return () -> {
 
                 if (instance.databaseEngine != null) {

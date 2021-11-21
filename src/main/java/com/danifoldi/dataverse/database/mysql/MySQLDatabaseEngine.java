@@ -2,61 +2,61 @@ package com.danifoldi.dataverse.database.mysql;
 
 import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.database.DatabaseEngine;
+import com.danifoldi.dataverse.translation.TranslationEngine;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.pool.HikariPool;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.ParameterizedType;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.spi.AbstractResourceBundleProvider;
+import java.util.stream.Collectors;
 
 public class MySQLDatabaseEngine implements DatabaseEngine {
 
     HikariPool connectionPool;
+    TranslationEngine translationEngine;
 
     @Override
-    public void connect(@NotNull Map<@NotNull String, @NotNull String> config) {
+    public void connect(@NotNull Map<@NotNull String, @NotNull String> config, TranslationEngine translationEngine) {
 
+        System.out.println(config);
+
+        this.translationEngine = translationEngine;
         HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setAutoCommit(true);
-        hikariConfig.setConnectionTimeout(10000);
-        hikariConfig.setAllowPoolSuspension(false);
-        hikariConfig.setIdleTimeout(30000);
-        hikariConfig.setConnectionTimeout(5000);
-        hikariConfig.setInitializationFailTimeout(5000);
-        hikariConfig.setKeepaliveTime(2000);
-        hikariConfig.setLeakDetectionThreshold(30000);
-        hikariConfig.setMaximumPoolSize(16);
-        hikariConfig.setMaxLifetime(3600000);
+        //hikariConfig.setAutoCommit(true);
+        //hikariConfig.setConnectionTimeout(10000);
+        //hikariConfig.setAllowPoolSuspension(false);
+        //hikariConfig.setIdleTimeout(30000);
+        //hikariConfig.setConnectionTimeout(5000);
+        //hikariConfig.setInitializationFailTimeout(5000);
+        //hikariConfig.setKeepaliveTime(2000);
+        //hikariConfig.setLeakDetectionThreshold(30000);
+        //hikariConfig.setMaximumPoolSize(16);
+        //hikariConfig.setMaxLifetime(3600000);
         hikariConfig.setPoolName("DataVerse Hikari MySQL Pool");
-        hikariConfig.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-        hikariConfig.setUsername(config.get("username"));
-        hikariConfig.setPassword(config.get("password"));
-        hikariConfig.setJdbcUrl(String.format("jdbc:mysql://%s:%s/%s?%s", config.get("host"), config.get("port"), config.get("database"), config.get("options").replaceFirst("^\\?", "")));
-        hikariConfig.addDataSourceProperty("cachePrepStmts", true);
-        hikariConfig.addDataSourceProperty("prepStmtCacheSize", 200);
-        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", 1024);
-        hikariConfig.addDataSourceProperty("cacheResultSetMetadata", true);
-        hikariConfig.addDataSourceProperty("cacheServerConfiguration", true);
-        hikariConfig.addDataSourceProperty("useServerPrepStmts", true);
-        hikariConfig.addDataSourceProperty("useLocalSessionState", true);
-        hikariConfig.addDataSourceProperty("rewriteBatchedStatements", true);
-        hikariConfig.addDataSourceProperty("maintainTimeStats", false);
+        hikariConfig.setDataSourceClassName(com.mysql.jdbc.jdbc2.optional.MysqlDataSource.class.getName());
+        hikariConfig.setUsername(config.get("mysql_user"));
+        hikariConfig.setPassword(config.get("mysql_password"));
+        hikariConfig.setJdbcUrl(String.format("jdbc:mysql://%s:%s/%s?%s", config.get("mysql_host"), config.get("mysql_port"), config.get("mysql_database"), config.get("mysql_connection_options").replaceFirst("^\\?", "")));
+        //hikariConfig.addDataSourceProperty("cachePrepStmts", true);
+        //hikariConfig.addDataSourceProperty("prepStmtCacheSize", 200);
+        //hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", 1024);
+        //hikariConfig.addDataSourceProperty("cacheResultSetMetadata", true);
+        //hikariConfig.addDataSourceProperty("cacheServerConfiguration", true);
+        //hikariConfig.addDataSourceProperty("useServerPrepStmts", true);
+        //hikariConfig.addDataSourceProperty("useLocalSessionState", true);
+        //hikariConfig.addDataSourceProperty("rewriteBatchedStatements", true);
+        //hikariConfig.addDataSourceProperty("maintainTimeStats", false);
 
         try {
 
@@ -127,64 +127,6 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
         return "%s_%s".formatted(type, name).toLowerCase(Locale.ROOT).replace("\s", "");
     }
 
-    @SuppressWarnings("unchecked")
-    private static<T> String columnType(Class<T> clazz) {
-
-        String typeName = clazz.getName();
-        return switch (typeName) {
-
-            case "java.lang.String" -> "VARCHAR(2048) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            case "int", "java.lang.Integer" -> "INT";
-            case "byte", "java.lang.Byte" -> "TINYINT";
-            case "long", "java.lang.Long" -> "BIGINT";
-            case "short", "java.lang.Short" -> "SMALLINT";
-            case "float", "java.lang.Float" -> "FLOAT";
-            case "double", "java.lang.Double" -> "DOUBLE";
-            case "boolean", "java.lang.Boolean" -> "BOOLEAN";
-            case "char", "java.lang.Char" -> "CHAR(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            case "org.bukkit.Location" -> "VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            case "org.bukkit.Material" -> "VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            case "org.bukkit.ItemStack" -> "TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            case "java.math.BigDecimal" -> "DECIMAL";
-            case "java.util.UUID" -> "VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            case "java.util.List" ->
-
-                    // todo list generic data
-                    "JSON";
-            case "java.util.Map" ->
-
-                    // todo list generic data
-                    "JSON";
-            default ->
-
-                    // todo throw
-                    "";
-        };
-
-    }
-
-    private static<T> String customDatatype(Class<T> clazz, T value) {
-        switch (clazz.getName()) {
-            case "org.bukkit.Location" -> {
-                Location l = (Location)value;
-                return l.getWorld().getName() + "," + l.getX() + "," + l.getY() + "," + l.getZ() + "," + l.getPitch() + "," + l.getYaw();
-            }
-            case "org.bukkit.Material" -> {
-                Material m = (Material)value;
-                return m.name();
-            }
-            case "org.bukkit.ItemStack" -> {
-                ItemStack i = (ItemStack)value;
-                YamlConfiguration config = new YamlConfiguration();
-                config.set("i", i);
-                return config.saveToString();
-            }
-        }
-
-        // todo throw
-        return null;
-    }
-
     private void setStatementValues(PreparedStatement statement, Object value, Map<String, FieldSpec> fieldMap) {
 
         AtomicInteger i = new AtomicInteger(1);
@@ -193,33 +135,24 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             try {
 
                 String typeName = spec.reflect().getName();
-                switch (typeName) {
+                translationEngine.getJavaTypeToMysqlQuery(typeName).apply(statement, i.getAndIncrement(), spec, value);
+            } catch (ReflectiveOperationException | SQLException e) {
 
-                    case "java.lang.String" -> statement.setString(i.getAndIncrement(), (String)spec.reflect().get(value));
-                    case "int", "java.lang.Integer" -> statement.setInt(i.getAndIncrement(), (Integer)spec.reflect().get(value));
-                    case "byte", "java.lang.Byte" -> statement.setByte(i.getAndIncrement(), (Byte)spec.reflect().get(value));
-                    case "long", "java.lang.Long" -> statement.setLong(i.getAndIncrement(), (Long)spec.reflect().get(value));
-                    case "short", "java.lang.Short" -> statement.setShort(i.getAndIncrement(), (Short)spec.reflect().get(value));
-                    case "float", "java.lang.Float" -> statement.setFloat(i.getAndIncrement(), (Float)spec.reflect().get(value));
-                    case "double", "java.lang.Double" -> statement.setDouble(i.getAndIncrement(), (Double)spec.reflect().get(value));
-                    case "boolean", "java.lang.Boolean" -> statement.setBoolean(i.getAndIncrement(), (Boolean)spec.reflect().get(value));
-                    case "char", "java.lang.Char" -> statement.setString(i.getAndIncrement(), String.valueOf(spec.reflect().get(value)));
-                    case "org.bukkit.Location" -> statement.setString(i.getAndIncrement(), customDatatype(Location.class, (Location)spec.reflect().get(value)));
-                    case "org.bukkit.Material" -> statement.setString(i.getAndIncrement(), customDatatype(Material.class, (Material)spec.reflect().get(value)));
-                    case "org.bukkit.ItemStack" -> statement.setString(i.getAndIncrement(), customDatatype(ItemStack.class, (ItemStack)spec.reflect().get(value)));
-                    case "java.math.BigDecimal" -> statement.setBigDecimal(i.getAndIncrement(), (BigDecimal)spec.reflect().get(value));
-                    case "java.util.UUID" -> statement.setString(i.getAndIncrement(), spec.reflect().get(value).toString());
-                    case "java.util.List" -> {}
+                // todo throw
+                e.printStackTrace();
+            }
+        });
+    }
 
-                            // todo list generic data
-                    case "java.util.Map" -> {}
+    private void setResultValues(ResultSet result, Object value, Map<String, FieldSpec> fieldMap) {
 
-                            // todo list generic data
-                    default -> {}
+        fieldMap.forEach((name, spec) -> {
 
-                            // todo throw
-                }
-            } catch (SQLException | ReflectiveOperationException e) {
+            String typeName = spec.reflect().getName();
+            try {
+
+                translationEngine.getMysqlResultToJavaType(typeName).apply(result, columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), spec, value);
+            } catch (ReflectiveOperationException | SQLException e) {
 
                 // todo throw
                 e.printStackTrace();
@@ -230,7 +163,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
     void createTable(String namespace, Map<String, FieldSpec> fieldMap) {
 
         StringBuilder columns = new StringBuilder();
-        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), columnType(spec.reflect().getDeclaringClass()))));
+        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), translationEngine.getMysqlColumn(spec.reflect().getDeclaringClass().getName()))));
 
         try (final @NotNull Connection connection = connectionPool.getConnection();
              final @NotNull PreparedStatement statement = connection.prepareStatement("""
@@ -257,19 +190,109 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
         }
     }
 
-    CompletableFuture<Boolean> create(String namespace, String key, Object value, Map<String, FieldSpec> fieldMap) {
+    <T> CompletableFuture<Boolean> create(String namespace, String key, T value, Map<String, FieldSpec> fieldMap) {
         return CompletableFuture.supplyAsync(() -> {
 
-            StringBuilder columns = new StringBuilder();
-            fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), columnType(spec.reflect().getDeclaringClass()))));
+            String columns = fieldMap.entrySet().stream().map(e -> "`%s` %s,\n".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()), translationEngine.getMysqlColumn(e.getValue().reflect().getDeclaringClass().getName()))).collect(Collectors.joining());
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
                  final @NotNull PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO `%s`
-                    (%s, %s) VALUES (%s, %s);
-             """.formatted(tableName(namespace), columnName("key"), columns.toString(), key, "? ".repeat(fieldMap.size())))) {
+                    (%s, %s) VALUES ("%s", %s);
+             """.formatted(tableName(namespace), columnName("key"), columns, key, "? ".repeat(fieldMap.size())))) {
 
                 setStatementValues(statement, value, fieldMap);
+                statement.execute();
+                return true;
+            } catch (SQLException e) {
+
+                // todo error
+                return false;
+            }
+        });
+    }
+
+    <T> CompletableFuture<T> get(String namespace, String key, T empty, Map<String, FieldSpec> fieldMap) {
+        return CompletableFuture.supplyAsync(() -> {
+
+            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()))).collect(Collectors.joining(", "));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+                    SELECT %s
+                    FROM %s
+                    WHERE `%s`="%s";
+             """.formatted(columns, tableName(namespace), columnName("key"), key));
+                 final @NotNull ResultSet results = statement.executeQuery()) {
+
+                setResultValues(results, empty, fieldMap);
+                return empty;
+            } catch (SQLException e) {
+
+                // todo error
+                return null;
+            }
+        });
+    }
+
+    CompletableFuture<Collection<String>> list(String namespace) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+                    SELECT `%s`
+                    FROM `%s`;
+             """.formatted(columnName("key"), tableName(namespace)));
+                 final @NotNull ResultSet results = statement.executeQuery()) {
+
+                Set<String> keys = new LinkedHashSet<>();
+                while (results.next()) {
+                    keys.add(columnName("key"));
+                }
+                return keys;
+            } catch (SQLException e) {
+
+                // todo error
+                return Collections.emptySet();
+            }
+        });
+    }
+
+    <T> CompletableFuture<Boolean> update(String namespace, String key, T value, Map<String, FieldSpec> fieldMap) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String values = fieldMap.entrySet().stream().map(e -> "`%s` = ?".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()))).collect(Collectors.joining(", "));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+                    UPDATE `%s`
+                    SET %s
+                    WHERE `%s`=`%s`;
+             """.formatted(tableName(namespace), values, columnName("key"), key))) {
+
+                setStatementValues(statement, value, fieldMap);
+                statement.execute();
+                return true;
+            } catch (SQLException e) {
+
+                // todo error
+                return false;
+            }
+        });
+    }
+
+    CompletableFuture<Boolean> delete(String namespace, String key) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+                    DELETE FROM `%s`
+                    WHERE `%s`=`%s`;
+             """.formatted(tableName(namespace), columnName("key"), key))) {
+
                 statement.execute();
                 return true;
             } catch (SQLException e) {

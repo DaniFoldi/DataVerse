@@ -28,6 +28,7 @@ public class MemoryDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public @NotNull CompletableFuture<@Nullable T> get(String key) {
 
         return CompletableFuture.supplyAsync(() -> (T)databaseEngine.getValue(namespace, key));

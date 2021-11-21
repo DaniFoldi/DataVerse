@@ -2,12 +2,9 @@ package com.danifoldi.dataverse.platform.bungee;
 
 import com.danifoldi.dataverse.DataVerse;
 import com.danifoldi.dataverse.data.Namespaced;
-import com.danifoldi.dataverse.database.StorageType;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Collections;
 
 @SuppressWarnings("unused")
 public class DataVersePlugin extends Plugin implements Namespaced {
@@ -18,7 +15,7 @@ public class DataVersePlugin extends Plugin implements Namespaced {
     public void onEnable() {
 
         DataVerse
-                .setInstance(StorageType.MEMORY, Collections.emptyMap())
+                .setInstance(getDataFolder().toPath().resolve("config.dml"))
                 .thenAccept(action -> closeDatabaseEngineConnection = action);
     }
 
