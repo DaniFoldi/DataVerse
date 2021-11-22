@@ -32,31 +32,34 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
         System.out.println(config);
 
         this.translationEngine = translationEngine;
+        String connectionUrl = String.format("jdbc:mysql://%s:%s/%s?%s",
+                config.get("mysql_host"), config.get("mysql_port"), config.get("mysql_database"),
+                config.get("mysql_connection_options").replaceFirst("^\\?", ""));
         HikariConfig hikariConfig = new HikariConfig();
-        //hikariConfig.setAutoCommit(true);
-        //hikariConfig.setConnectionTimeout(10000);
-        //hikariConfig.setAllowPoolSuspension(false);
-        //hikariConfig.setIdleTimeout(30000);
-        //hikariConfig.setConnectionTimeout(5000);
-        //hikariConfig.setInitializationFailTimeout(5000);
-        //hikariConfig.setKeepaliveTime(2000);
-        //hikariConfig.setLeakDetectionThreshold(30000);
-        //hikariConfig.setMaximumPoolSize(16);
-        //hikariConfig.setMaxLifetime(3600000);
+        hikariConfig.setAutoCommit(true);
+        hikariConfig.setConnectionTimeout(10000);
+        hikariConfig.setAllowPoolSuspension(false);
+        hikariConfig.setIdleTimeout(30000);
+        hikariConfig.setConnectionTimeout(5000);
+        hikariConfig.setInitializationFailTimeout(5000);
+        hikariConfig.setKeepaliveTime(2000);
+        hikariConfig.setLeakDetectionThreshold(30000);
+        hikariConfig.setMaximumPoolSize(16);
+        hikariConfig.setMaxLifetime(3600000);
         hikariConfig.setPoolName("DataVerse Hikari MySQL Pool");
-        hikariConfig.setDataSourceClassName(com.mysql.jdbc.jdbc2.optional.MysqlDataSource.class.getName());
+        hikariConfig.setDriverClassName(com.mysql.jdbc.Driver.class.getName());
         hikariConfig.setUsername(config.get("mysql_user"));
         hikariConfig.setPassword(config.get("mysql_password"));
-        hikariConfig.setJdbcUrl(String.format("jdbc:mysql://%s:%s/%s?%s", config.get("mysql_host"), config.get("mysql_port"), config.get("mysql_database"), config.get("mysql_connection_options").replaceFirst("^\\?", "")));
-        //hikariConfig.addDataSourceProperty("cachePrepStmts", true);
-        //hikariConfig.addDataSourceProperty("prepStmtCacheSize", 200);
-        //hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", 1024);
-        //hikariConfig.addDataSourceProperty("cacheResultSetMetadata", true);
-        //hikariConfig.addDataSourceProperty("cacheServerConfiguration", true);
-        //hikariConfig.addDataSourceProperty("useServerPrepStmts", true);
-        //hikariConfig.addDataSourceProperty("useLocalSessionState", true);
-        //hikariConfig.addDataSourceProperty("rewriteBatchedStatements", true);
-        //hikariConfig.addDataSourceProperty("maintainTimeStats", false);
+        hikariConfig.setJdbcUrl(connectionUrl);
+        hikariConfig.addDataSourceProperty("cachePrepStmts", true);
+        hikariConfig.addDataSourceProperty("prepStmtCacheSize", 200);
+        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", 1024);
+        hikariConfig.addDataSourceProperty("cacheResultSetMetadata", true);
+        hikariConfig.addDataSourceProperty("cacheServerConfiguration", true);
+        hikariConfig.addDataSourceProperty("useServerPrepStmts", true);
+        hikariConfig.addDataSourceProperty("useLocalSessionState", true);
+        hikariConfig.addDataSourceProperty("rewriteBatchedStatements", true);
+        hikariConfig.addDataSourceProperty("maintainTimeStats", false);
 
         try {
 
