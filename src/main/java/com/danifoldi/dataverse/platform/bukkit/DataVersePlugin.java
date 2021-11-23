@@ -1,27 +1,17 @@
 package com.danifoldi.dataverse.platform.bukkit;
 
 import com.danifoldi.dataverse.DataVerse;
-import com.danifoldi.dataverse.data.Namespaced;
 import com.danifoldi.dataverse.translation.TranslationEngine;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
 @SuppressWarnings("unused")
-public class DataVersePlugin extends JavaPlugin implements Namespaced {
-
-    static class UserAccount {
-        UUID uuid;
-        String name;
-        BigDecimal balance;
-    }
+public class DataVersePlugin extends JavaPlugin {
 
     private @Nullable Runnable closeDatabaseEngineConnection;
 
@@ -34,7 +24,6 @@ public class DataVersePlugin extends JavaPlugin implements Namespaced {
 
                     closeDatabaseEngineConnection = action;
 
-                    assert DataVerse.getDataVerse() != null;
                     TranslationEngine engine = DataVerse.getDataVerse().getTranslationEngine();
 
                     engine.addJavaTypeToMysqlColumn("org.bukkit.Location", "VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
@@ -64,19 +53,19 @@ public class DataVersePlugin extends JavaPlugin implements Namespaced {
                     });
                     engine.addMysqlResultToJavaType("org.bukkit.Material", (results, colName, spec, obj) -> {
 
-                        String[] parts = results.getString(colName).split(",");
-                        spec.reflect().set(obj, new Location(Bukkit.getWorld(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]), Double.parseDouble(parts[3]), Float.parseFloat(parts[4]), Float.parseFloat(parts[5])));
+                        spec.reflect().set(obj, Material.valueOf(results.getString(colName)));
                     });
                     engine.addMysqlResultToJavaType("org.bukkit.ItemStack", (results, colName, spec, obj) -> {
 
-                        String[] parts = results.getString(colName).split(",");
-                        spec.reflect().set(obj, new Location(Bukkit.getWorld(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]), Double.parseDouble(parts[3]), Float.parseFloat(parts[4]), Float.parseFloat(parts[5])));
-                    });
+                        YamlConfiguration config = new YamlConfiguration();
+                        try {
 
-                    DataVerse
-                            .getDataVerse()
-                            .getNamespacedDataVerse(this, "test", UserAccount::new)
-                            .create(UUID.randomUUID(), new UserAccount());
+                            config.loadFromString(results.getString(colName));
+                        } catch (InvalidConfigurationException ignored) {
+
+                        }
+                        spec.reflect().set(obj, config.get("i"));
+                    });
                 }).join();
     }
 
@@ -87,11 +76,5 @@ public class DataVersePlugin extends JavaPlugin implements Namespaced {
 
             closeDatabaseEngineConnection.run();
         }
-    }
-
-    @Override
-    public @NotNull String getNamespace() {
-
-        return getDescription().getName();
     }
 }

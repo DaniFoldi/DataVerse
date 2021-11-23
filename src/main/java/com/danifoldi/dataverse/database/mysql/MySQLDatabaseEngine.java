@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MySQLDatabaseEngine implements DatabaseEngine {
 
@@ -28,8 +29,6 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
     @Override
     public void connect(@NotNull Map<@NotNull String, @NotNull String> config, TranslationEngine translationEngine) {
-
-        System.out.println(config);
 
         this.translationEngine = translationEngine;
         String connectionUrl = String.format("jdbc:mysql://%s:%s/%s?%s",
@@ -112,7 +111,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
     private String tableName(String namespace) {
 
-        return "%s_dataverse".formatted(namespace).toLowerCase(Locale.ROOT).replace("\s", "");
+        return "%s__dataverse".formatted(namespace).toLowerCase(Locale.ROOT).replace("\s", "");
     }
 
     private String eventName(String namespace, String event) {
@@ -137,7 +136,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
             try {
 
-                String typeName = spec.reflect().getName();
+                String typeName = spec.type().toString();
                 translationEngine.getJavaTypeToMysqlQuery(typeName).apply(statement, i.getAndIncrement(), spec, value);
             } catch (ReflectiveOperationException | SQLException e) {
 
@@ -151,7 +150,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
         fieldMap.forEach((name, spec) -> {
 
-            String typeName = spec.reflect().getName();
+            String typeName = spec.type().toString();
             try {
 
                 translationEngine.getMysqlResultToJavaType(typeName).apply(result, columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), spec, value);
@@ -166,7 +165,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
     void createTable(String namespace, Map<String, FieldSpec> fieldMap) {
 
         StringBuilder columns = new StringBuilder();
-        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), translationEngine.getMysqlColumn(spec.reflect().getDeclaringClass().getName()))));
+        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), translationEngine.getMysqlColumn(spec.type().toString()))));
 
         try (final @NotNull Connection connection = connectionPool.getConnection();
              final @NotNull PreparedStatement statement = connection.prepareStatement("""
@@ -189,6 +188,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             statement.execute();
         } catch (SQLException e) {
 
+            System.out.println(e.getMessage());
             // todo error
         }
     }
@@ -196,20 +196,22 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
     <T> CompletableFuture<Boolean> create(String namespace, String key, T value, Map<String, FieldSpec> fieldMap) {
         return CompletableFuture.supplyAsync(() -> {
 
-            String columns = fieldMap.entrySet().stream().map(e -> "`%s` %s,\n".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()), translationEngine.getMysqlColumn(e.getValue().reflect().getDeclaringClass().getName()))).collect(Collectors.joining());
+            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()))).collect(Collectors.joining(", "));
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
                  final @NotNull PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO `%s`
                     (%s, %s) VALUES ("%s", %s);
-             """.formatted(tableName(namespace), columnName("key"), columns, key, "? ".repeat(fieldMap.size())))) {
+             """.formatted(tableName(namespace), columnName("key"), columns, key, String.join(", ", Collections.nCopies(fieldMap.size(), "?"))))) {
 
                 setStatementValues(statement, value, fieldMap);
                 statement.execute();
+
                 return true;
             } catch (SQLException e) {
 
                 // todo error
+                System.out.println(e.getMessage());
                 return false;
             }
         });
@@ -233,6 +235,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             } catch (SQLException e) {
 
                 // todo error
+                System.out.println(e.getMessage());
                 return null;
             }
         });
@@ -257,6 +260,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             } catch (SQLException e) {
 
                 // todo error
+                System.out.println(e.getMessage());
                 return Collections.emptySet();
             }
         });
@@ -281,6 +285,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             } catch (SQLException e) {
 
                 // todo error
+                System.out.println(e.getMessage());
                 return false;
             }
         });
@@ -301,6 +306,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             } catch (SQLException e) {
 
                 // todo error
+                System.out.println(e.getMessage());
                 return false;
             }
         });

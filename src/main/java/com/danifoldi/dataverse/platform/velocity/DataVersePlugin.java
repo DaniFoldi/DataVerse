@@ -1,7 +1,6 @@
 package com.danifoldi.dataverse.platform.velocity;
 
 import com.danifoldi.dataverse.DataVerse;
-import com.danifoldi.dataverse.data.Namespaced;
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -18,7 +17,7 @@ import java.nio.file.Path;
         version = "@version@",
         description = "DataVerse is an API plugin that manages data storage on many platforms.",
         authors={"DaniFoldi", "Hgex"})
-public class DataVersePlugin implements Namespaced {
+public class DataVersePlugin {
 
     private @Nullable Runnable closeDatabaseEngineConnection;
     private @NotNull Path datafolder;
@@ -44,11 +43,5 @@ public class DataVersePlugin implements Namespaced {
 
             closeDatabaseEngineConnection.run();
         }
-    }
-
-    @Override
-    public @NotNull String getNamespace() {
-
-        return "DataVerse";
     }
 }

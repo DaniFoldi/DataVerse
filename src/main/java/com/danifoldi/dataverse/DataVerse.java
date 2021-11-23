@@ -58,7 +58,7 @@ public class DataVerse {
 
         return (NamespacedDataVerse<T>)
                 cache.computeIfAbsent(
-                        String.format("%s:%s", namespaced.getNamespace(), name),
+                        String.format("%s_%s", namespaced.getNamespace(), name),
                         namespaceName -> createNamespacedDataVerse(namespaceName, instanceSupplier)
                 );
     }
@@ -85,8 +85,12 @@ public class DataVerse {
 
     private static @Nullable DataVerse instance;
 
-    public static @Nullable DataVerse getDataVerse() {
+    public static @NotNull DataVerse getDataVerse() {
 
+        if (instance == null) {
+
+            throw new IllegalStateException("DataVerse has not yet been set up");
+        }
         return instance;
     }
 
@@ -115,7 +119,6 @@ public class DataVerse {
             instance.setup(config);
             instance.translationEngine.clear();
             instance.translationEngine.setupStandard();
-            System.out.println("translationengine");
             return () -> {
 
                 if (instance.databaseEngine != null) {

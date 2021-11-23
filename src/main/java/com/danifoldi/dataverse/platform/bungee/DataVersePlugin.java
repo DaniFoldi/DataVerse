@@ -1,13 +1,11 @@
 package com.danifoldi.dataverse.platform.bungee;
 
 import com.danifoldi.dataverse.DataVerse;
-import com.danifoldi.dataverse.data.Namespaced;
 import net.md_5.bungee.api.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class DataVersePlugin extends Plugin implements Namespaced {
+public class DataVersePlugin extends Plugin {
 
     private @Nullable Runnable closeDatabaseEngineConnection;
 
@@ -26,11 +24,5 @@ public class DataVersePlugin extends Plugin implements Namespaced {
 
             closeDatabaseEngineConnection.run();
         }
-    }
-
-    @Override
-    public @NotNull String getNamespace() {
-
-        return getDescription().getName();
     }
 }
