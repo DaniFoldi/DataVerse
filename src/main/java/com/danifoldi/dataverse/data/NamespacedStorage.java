@@ -12,7 +12,7 @@ public interface NamespacedStorage<T> {
     default @NotNull CompletableFuture<@NotNull Boolean> exists(final @NotNull String key) {
 
         return CompletableFuture.supplyAsync(() -> get(key).join() != null);
-    };
+    }
 
     @NotNull CompletableFuture<@NotNull Boolean> create(String key, T value);
 

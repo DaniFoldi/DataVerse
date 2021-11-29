@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 public class DataVerse {
 
@@ -27,6 +28,7 @@ public class DataVerse {
     private @Nullable DatabaseEngine databaseEngine = null;
     private @NotNull TranslationEngine translationEngine = new TranslationEngine();
     private @Nullable StorageType storageType;
+    private @NotNull Logger logger = Logger.getLogger("DataVerse DatabaseEngine");
 
     private DataVerse() {
 
@@ -41,11 +43,13 @@ public class DataVerse {
             case MEMORY -> {
 
                 databaseEngine = new MemoryDatabaseEngine();
+                databaseEngine.setLogger(logger);
                 databaseEngine.connect(config, translationEngine);
             }
             case MYSQL -> {
 
                 databaseEngine = new MySQLDatabaseEngine();
+                databaseEngine.setLogger(logger);
                 databaseEngine.connect(config, translationEngine);
             }
         }

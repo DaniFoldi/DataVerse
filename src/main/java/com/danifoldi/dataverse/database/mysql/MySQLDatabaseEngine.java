@@ -19,16 +19,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MySQLDatabaseEngine implements DatabaseEngine {
 
     HikariPool connectionPool;
     TranslationEngine translationEngine;
+    Logger logger;
 
     @Override
-    public void connect(@NotNull Map<@NotNull String, @NotNull String> config, TranslationEngine translationEngine) {
+    public void setLogger(@NotNull Logger logger) {
+
+        this.logger = logger;
+    }
+
+    @Override
+    public void connect(@NotNull Map<@NotNull String, @NotNull String> config, @NotNull TranslationEngine translationEngine) {
 
         this.translationEngine = translationEngine;
         String connectionUrl = String.format("jdbc:mysql://%s:%s/%s?%s",
@@ -46,7 +53,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
         hikariConfig.setMaximumPoolSize(16);
         hikariConfig.setMaxLifetime(3600000);
         hikariConfig.setPoolName("DataVerse Hikari MySQL Pool");
-        hikariConfig.setDriverClassName(com.mysql.jdbc.Driver.class.getName());
+        hikariConfig.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
         hikariConfig.setUsername(config.get("mysql_user"));
         hikariConfig.setPassword(config.get("mysql_password"));
         hikariConfig.setJdbcUrl(connectionUrl);
@@ -91,8 +98,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
     void createTTLEvent(String namespace) {
 
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement("""
+        String st = """
                     CREATE EVENT IF NOT EXISTS
                       `%s`
                     ON SCHEDULE EVERY 1 HOUR
@@ -100,7 +106,11 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                     DELETE FROM
                       `%s`
                     WHERE `%s` < NOW();
-             """.formatted(eventName(namespace, "ttl"), tableName(namespace), columnName("ttl_timestamp")))) {
+             """.formatted(eventName(namespace, "ttl"), tableName(namespace), columnName("ttl_timestamp"));
+        logger.info("Executing statement %s".formatted(st));
+
+        try (final @NotNull Connection connection = connectionPool.getConnection();
+             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
 
             statement.execute();
         } catch (SQLException e) {
@@ -111,22 +121,22 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
     private String tableName(String namespace) {
 
-        return "%s__dataverse".formatted(namespace).toLowerCase(Locale.ROOT).replace("\s", "");
+        return "%s__dataverse".formatted(namespace).toLowerCase(Locale.ROOT).replaceAll("\s", "").replace(".",  "_");
     }
 
     private String eventName(String namespace, String event) {
 
-        return "%s_%s_dataverse".formatted(namespace, event).toLowerCase(Locale.ROOT).replace("\s", "");
+        return "%s_%s_dataverse".formatted(namespace, event).toLowerCase(Locale.ROOT).replaceAll("\s", "").replace(".",  "_");
     }
 
     private String columnName(String name) {
 
-        return "dataverse_%s".formatted(name).toLowerCase(Locale.ROOT).replace("\s", "");
+        return "dataverse_%s".formatted(name).toLowerCase(Locale.ROOT).replaceAll("\s", "").replace(".",  "_");
     }
 
     private String columnName(String type, String name) {
 
-        return "%s_%s".formatted(type, name).toLowerCase(Locale.ROOT).replace("\s", "");
+        return "%s_%s".formatted(type, name).toLowerCase(Locale.ROOT).replaceAll("\s", "").replace(".",  "_");
     }
 
     private void setStatementValues(PreparedStatement statement, Object value, Map<String, FieldSpec> fieldMap) {
@@ -150,10 +160,9 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
         fieldMap.forEach((name, spec) -> {
 
-            String typeName = spec.type().toString();
             try {
 
-                translationEngine.getMysqlResultToJavaType(typeName).apply(result, columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), spec, value);
+                translationEngine.getMysqlResultToJavaType(spec.type().toString()).apply(result, columnName(spec.type().toString(), name), spec, value);
             } catch (ReflectiveOperationException | SQLException e) {
 
                 // todo throw
@@ -165,10 +174,9 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
     void createTable(String namespace, Map<String, FieldSpec> fieldMap) {
 
         StringBuilder columns = new StringBuilder();
-        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.reflect().getDeclaringClass().getSimpleName(), name), translationEngine.getMysqlColumn(spec.type().toString()))));
+        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.type().toString(), name), translationEngine.getMysqlColumn(spec.type().toString()))));
 
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement("""
+        String st = """
                     CREATE TABLE IF NOT EXISTS
                     `%s`
                      (
@@ -183,7 +191,11 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                      ENGINE = InnoDB
                      CHARSET = utf8mb4
                      COLLATE utf8mb4_unicode_ci;
-             """.formatted(tableName(namespace), columnName("key"), columnName("create_timestamp"), columnName("update_timestamp"), columnName("ttl_timestamp"), columns.toString(), columnName("key")))) {
+             """.formatted(tableName(namespace), columnName("key"), columnName("create_timestamp"), columnName("update_timestamp"), columnName("ttl_timestamp"), columns.toString(), columnName("key"));
+        logger.info("Executing statement %s".formatted(st));
+
+        try (final @NotNull Connection connection = connectionPool.getConnection();
+             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
 
             statement.execute();
         } catch (SQLException e) {
@@ -196,13 +208,15 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
     <T> CompletableFuture<Boolean> create(String namespace, String key, T value, Map<String, FieldSpec> fieldMap) {
         return CompletableFuture.supplyAsync(() -> {
 
-            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()))).collect(Collectors.joining(", "));
+            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
+            String st = """
+                    INSERT INTO `%s`
+                    (`%s`, %s) VALUES ("%s", %s);
+             """.formatted(tableName(namespace), columnName("key"), columns, key, String.join(", ", Collections.nCopies(fieldMap.size(), "?")));
+            logger.info("Executing statement %s".formatted(st));
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
-                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
-                    INSERT INTO `%s`
-                    (%s, %s) VALUES ("%s", %s);
-             """.formatted(tableName(namespace), columnName("key"), columns, key, String.join(", ", Collections.nCopies(fieldMap.size(), "?"))))) {
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
 
                 setStatementValues(statement, value, fieldMap);
                 statement.execute();
@@ -220,16 +234,22 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
     <T> CompletableFuture<T> get(String namespace, String key, T empty, Map<String, FieldSpec> fieldMap) {
         return CompletableFuture.supplyAsync(() -> {
 
-            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()))).collect(Collectors.joining(", "));
-
-            try (final @NotNull Connection connection = connectionPool.getConnection();
-                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
+            String st = """
                     SELECT %s
                     FROM %s
                     WHERE `%s`="%s";
-             """.formatted(columns, tableName(namespace), columnName("key"), key));
+             """.formatted(columns, tableName(namespace), columnName("key"), key);
+            logger.info("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st);
                  final @NotNull ResultSet results = statement.executeQuery()) {
 
+                if (!results.next()) {
+
+                    return null;
+                }
                 setResultValues(results, empty, fieldMap);
                 return empty;
             } catch (SQLException e) {
@@ -245,11 +265,14 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            try (final @NotNull Connection connection = connectionPool.getConnection();
-                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+            String st = """
                     SELECT `%s`
                     FROM `%s`;
-             """.formatted(columnName("key"), tableName(namespace)));
+             """.formatted(columnName("key"), tableName(namespace));
+             logger.info("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st);
                  final @NotNull ResultSet results = statement.executeQuery()) {
 
                 Set<String> keys = new LinkedHashSet<>();
@@ -270,14 +293,16 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            String values = fieldMap.entrySet().stream().map(e -> "`%s` = ?".formatted(columnName(e.getValue().reflect().getDeclaringClass().getSimpleName(), e.getKey()))).collect(Collectors.joining(", "));
-
-            try (final @NotNull Connection connection = connectionPool.getConnection();
-                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+            String values = fieldMap.entrySet().stream().map(e -> "`%s` = ?".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
+            String st = """
                     UPDATE `%s`
                     SET %s
-                    WHERE `%s`=`%s`;
-             """.formatted(tableName(namespace), values, columnName("key"), key))) {
+                    WHERE `%s`="%s";
+             """.formatted(tableName(namespace), values, columnName("key"), key);
+            logger.info("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
 
                 setStatementValues(statement, value, fieldMap);
                 statement.execute();

@@ -8,13 +8,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public class MemoryDatabaseEngine implements DatabaseEngine {
 
     private final @NotNull Map<@NotNull String, @NotNull Map<@NotNull String, @NotNull Object>> storage = new ConcurrentHashMap<>();
 
     @Override
-    public void connect(@NotNull Map<@NotNull String, @NotNull String> config, @NotNull TranslationEngine translationEngine) {
+    public void setLogger(@NotNull Logger logger) {
+
+    }
+
+    @Override
+    public void connect(@NotNull Map<@NotNull String, @NotNull String> config, final @NotNull TranslationEngine translationEngine) {
 
         storage.clear();
     }
