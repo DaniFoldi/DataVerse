@@ -21,7 +21,7 @@ repositories {
 dependencies {
     // platforms
     compileOnly 'io.github.waterfallmc:waterfall-api:1.18-R0.1-SNAPSHOT'
-    compileOnly 'io.papermc.paper:paper-api:1.18-rc3-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.18-R0.1-SNAPSHOT'
     compileOnly 'com.velocitypowered:velocity-api:3.1.1'
     annotationProcessor 'com.velocitypowered:velocity-api:3.1.1'
 
@@ -36,8 +36,8 @@ dependencies {
 
     // inject system
     implementation 'javax.inject:javax.inject:1'
-    implementation 'com.google.dagger:dagger:2.40.2'
-    annotationProcessor 'com.google.dagger:dagger-compiler:2.40.2'
+    implementation 'com.google.dagger:dagger:2.40.5'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.40.5'
 
     // intellij
     compileOnly 'org.jetbrains:annotations:23.0.0'
