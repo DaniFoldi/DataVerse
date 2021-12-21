@@ -5,8 +5,6 @@ import com.danifoldi.dataverse.data.Namespaced;
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
 import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.danifoldi.dataverse.database.StorageType;
-import com.danifoldi.dataverse.database.memory.MemoryDataVerse;
-import com.danifoldi.dataverse.database.memory.MemoryDatabaseEngine;
 import com.danifoldi.dataverse.database.mysql.MySQLDataVerse;
 import com.danifoldi.dataverse.database.mysql.MySQLDatabaseEngine;
 import com.danifoldi.dataverse.translation.TranslationEngine;
@@ -40,12 +38,6 @@ public class DataVerse {
 
         switch (storageType) {
 
-            case MEMORY -> {
-
-                databaseEngine = new MemoryDatabaseEngine();
-                databaseEngine.setLogger(logger);
-                databaseEngine.connect(config, translationEngine);
-            }
             case MYSQL -> {
 
                 databaseEngine = new MySQLDatabaseEngine();
@@ -71,7 +63,6 @@ public class DataVerse {
 
         return switch (storageType) {
 
-            case MEMORY -> new MemoryDataVerse<>((MemoryDatabaseEngine)databaseEngine, namespace, instanceSupplier);
             case MYSQL -> new MySQLDataVerse<>((MySQLDatabaseEngine)databaseEngine, namespace, instanceSupplier);
             default -> null;
         };
