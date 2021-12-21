@@ -11,22 +11,25 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class MySQLDatabaseEngine implements DatabaseEngine {
 
-    HikariPool connectionPool;
-    TranslationEngine translationEngine;
-    Logger logger;
+    private HikariPool connectionPool;
+    private TranslationEngine translationEngine;
+    private Logger logger;
 
     @Override
     public void setLogger(@NotNull Logger logger) {
@@ -75,7 +78,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             }
         } catch (InterruptedException e) {
 
-            // todo warn
+            logger.severe(e.getMessage());
         }
 
         connectionPool = new HikariPool(hikariConfig);
@@ -92,7 +95,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             }
         } catch (InterruptedException e) {
 
-            // todo warn
+            logger.severe(e.getMessage());
         }
     }
 
@@ -106,8 +109,8 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                     DELETE FROM
                       `%s`
                     WHERE `%s` < NOW();
-             """.formatted(eventName(namespace, "ttl"), tableName(namespace), columnName("ttl_timestamp"));
-        logger.info("Executing statement %s".formatted(st));
+             """.formatted(eventName(namespace, "ttl"), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP));
+        logger.fine("Executing statement %s".formatted(st));
 
         try (final @NotNull Connection connection = connectionPool.getConnection();
              final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
@@ -115,7 +118,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             statement.execute();
         } catch (SQLException e) {
 
-            // todo error
+            logger.severe(e.getMessage());
         }
     }
 
@@ -150,8 +153,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                 translationEngine.getJavaTypeToMysqlQuery(typeName).apply(statement, i.getAndIncrement(), spec, value);
             } catch (ReflectiveOperationException | SQLException e) {
 
-                // todo throw
-                e.printStackTrace();
+                logger.severe(e.getMessage());
             }
         });
     }
@@ -165,8 +167,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                 translationEngine.getMysqlResultToJavaType(spec.type().toString()).apply(result, columnName(spec.type().toString(), name), spec, value);
             } catch (ReflectiveOperationException | SQLException e) {
 
-                // todo throw
-                e.printStackTrace();
+                logger.severe(e.getMessage());
             }
         });
     }
@@ -191,8 +192,8 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                      ENGINE = InnoDB
                      CHARSET = utf8mb4
                      COLLATE utf8mb4_unicode_ci;
-             """.formatted(tableName(namespace), columnName("key"), columnName("create_timestamp"), columnName("update_timestamp"), columnName("ttl_timestamp"), columns.toString(), columnName("key"));
-        logger.info("Executing statement %s".formatted(st));
+             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), columnName(ColumnNames.CREATE_TIMESTAMP), columnName(ColumnNames.UPDATE_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columns.toString(), columnName(ColumnNames.KEY));
+        logger.fine("Executing statement %s".formatted(st));
 
         try (final @NotNull Connection connection = connectionPool.getConnection();
              final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
@@ -200,8 +201,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             statement.execute();
         } catch (SQLException e) {
 
-            System.out.println(e.getMessage());
-            // todo error
+            logger.severe(e.getMessage());
         }
     }
 
@@ -212,8 +212,8 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             String st = """
                     INSERT INTO `%s`
                     (`%s`, %s) VALUES ("%s", %s);
-             """.formatted(tableName(namespace), columnName("key"), columns, key, String.join(", ", Collections.nCopies(fieldMap.size(), "?")));
-            logger.info("Executing statement %s".formatted(st));
+             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), columns, key, String.join(", ", Collections.nCopies(fieldMap.size(), "?")));
+            logger.fine("Executing statement %s".formatted(st));
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
                  final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
@@ -224,8 +224,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                 return true;
             } catch (SQLException e) {
 
-                // todo error
-                System.out.println(e.getMessage());
+                logger.severe(e.getMessage());
                 return false;
             }
         });
@@ -236,11 +235,12 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
             String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
             String st = """
-                    SELECT %s
-                    FROM %s
-                    WHERE `%s`="%s";
-             """.formatted(columns, tableName(namespace), columnName("key"), key);
-            logger.info("Executing statement %s".formatted(st));
+                    SELECT `%s`
+                    FROM `%s`
+                    WHERE `%s`="%s"
+                      AND (`%s` >= NOW() OR `%s` IS NULL);
+             """.formatted(columns, tableName(namespace), columnName(ColumnNames.KEY), key, columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+            logger.fine("Executing statement %s".formatted(st));
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
                  final @NotNull PreparedStatement statement = connection.prepareStatement(st);
@@ -254,37 +254,194 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                 return empty;
             } catch (SQLException e) {
 
-                // todo error
-                System.out.println(e.getMessage());
+                logger.severe(e.getMessage());
                 return null;
             }
         });
     }
 
-    CompletableFuture<Collection<String>> list(String namespace) {
+    CompletableFuture<List<String>> keys(String namespace) {
 
         return CompletableFuture.supplyAsync(() -> {
 
             String st = """
                     SELECT `%s`
-                    FROM `%s`;
-             """.formatted(columnName("key"), tableName(namespace));
-             logger.info("Executing statement %s".formatted(st));
+                    FROM `%s`
+                    WHERE (`%s` >= NOW() OR `%s` IS NULL);
+             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+            logger.fine("Executing statement %s".formatted(st));
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
                  final @NotNull PreparedStatement statement = connection.prepareStatement(st);
                  final @NotNull ResultSet results = statement.executeQuery()) {
 
-                Set<String> keys = new LinkedHashSet<>();
+                List<String> keys = new ArrayList<>();
                 while (results.next()) {
-                    keys.add(columnName("key"));
+                    keys.add(columnName(ColumnNames.KEY));
                 }
                 return keys;
             } catch (SQLException e) {
 
-                // todo error
-                System.out.println(e.getMessage());
-                return Collections.emptySet();
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    CompletableFuture<List<String>> keys(String namespace, int pageCount, int pageLength) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String st = """
+                    SELECT `%s`
+                    FROM `%s`
+                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
+                    LIMIT %d
+                    OFFSET %d;
+             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), pageLength, (pageCount - 1) * pageLength);
+            logger.fine("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st);
+                 final @NotNull ResultSet results = statement.executeQuery()) {
+
+                List<String> keys = new ArrayList<>();
+                while (results.next()) {
+                    keys.add(columnName(ColumnNames.KEY));
+                }
+                return keys;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    CompletableFuture<List<String>> keys(String namespace, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String st = """
+                    SELECT `%s`
+                    FROM `%s` 
+                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
+                    ORDER BY `%s`
+                    %s
+                    LIMIT %d
+                    OFFSET %d;
+             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columnName(sortKey.type().toString(), sortKey.name()), reverse ? "DESC" : "ASC", pageLength, (pageCount - 1) * pageLength);
+            logger.fine("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st);
+                 final @NotNull ResultSet results = statement.executeQuery()) {
+
+                List<String> keys = new ArrayList<>();
+                while (results.next()) {
+                    keys.add(columnName(ColumnNames.KEY));
+                }
+                return keys;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<T>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String st = """
+                    SELECT *
+                    FROM `%s`
+                    WHERE (`%s` >= NOW() OR `%s` IS NULL);
+             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+            logger.fine("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st);
+                 final @NotNull ResultSet results = statement.executeQuery()) {
+
+                List<T> values = new ArrayList<>();
+                T value = instanceSupplier.get();
+                while (results.next()) {
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<T>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String st = """
+                    SELECT *
+                    FROM `%s`
+                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
+                    LIMIT %d
+                    OFFSET %d;
+             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), pageLength, (pageCount - 1) * pageLength);
+            logger.fine("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st);
+                 final @NotNull ResultSet results = statement.executeQuery()) {
+
+                List<T> values = new ArrayList<>();
+                T value = instanceSupplier.get();
+                while (results.next()) {
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<T>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String st = """
+                    SELECT *
+                    FROM `%s` 
+                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
+                    ORDER BY `%s`
+                    %s
+                    LIMIT %d
+                    OFFSET %d;
+             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columnName(sortKey.type().toString(), sortKey.name()), reverse ? "DESC" : "ASC", pageLength, (pageCount - 1) * pageLength);
+            logger.fine("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st);
+                 final @NotNull ResultSet results = statement.executeQuery()) {
+
+                List<T> values = new ArrayList<>();
+                T value = instanceSupplier.get();
+                while (results.next()) {
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
             }
         });
     }
@@ -297,9 +454,10 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
             String st = """
                     UPDATE `%s`
                     SET %s
-                    WHERE `%s`="%s";
-             """.formatted(tableName(namespace), values, columnName("key"), key);
-            logger.info("Executing statement %s".formatted(st));
+                    WHERE `%s`="%s"
+                      AND (`%s` >= NOW() OR `%s` IS NULL);
+             """.formatted(tableName(namespace), values, columnName(ColumnNames.KEY), key, columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+            logger.fine("Executing statement %s".formatted(st));
 
             try (final @NotNull Connection connection = connectionPool.getConnection();
                  final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
@@ -309,8 +467,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
                 return true;
             } catch (SQLException e) {
 
-                // todo error
-                System.out.println(e.getMessage());
+                logger.severe(e.getMessage());
                 return false;
             }
         });
@@ -320,18 +477,52 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            try (final @NotNull Connection connection = connectionPool.getConnection();
-                 final @NotNull PreparedStatement statement = connection.prepareStatement("""
+            String st = """
                     DELETE FROM `%s`
-                    WHERE `%s`=`%s`;
-             """.formatted(tableName(namespace), columnName("key"), key))) {
+                    WHERE `%s`=`%s`
+                      AND (`%s` >= NOW() OR `%s` IS NULL);
+             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), key, columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+            logger.fine("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
 
                 statement.execute();
                 return true;
             } catch (SQLException e) {
 
-                // todo error
-                System.out.println(e.getMessage());
+                logger.severe(e.getMessage());
+                return false;
+            }
+        });
+    }
+
+    CompletableFuture<Boolean> expire(String namespace, String key, Instant expiry) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            String st = """
+                    UPDATE `%s`
+                    SET `%s` = ?
+                    WHERE `%s`="%s";
+             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.KEY), key);
+            logger.fine("Executing statement %s".formatted(st));
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                if (expiry == null) {
+
+                    statement.setNull(1, Types.TIMESTAMP);
+                } else {
+
+                    statement.setTimestamp(1, Timestamp.from(expiry));
+                }
+                statement.execute();
+                return true;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
                 return false;
             }
         });

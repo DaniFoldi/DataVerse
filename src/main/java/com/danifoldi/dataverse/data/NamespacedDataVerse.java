@@ -27,16 +27,21 @@ public abstract class NamespacedDataVerse<T> implements NamespacedStorage<T> {
     private void buildFieldMap() {
 
         fieldMap.clear();
-        T t = instanceSupplier.get();
+        final @NotNull T t = instanceSupplier.get();
 
-        for (final Field field : t.getClass().getDeclaredFields()) {
+        for (final Field field: t.getClass().getDeclaredFields()) {
 
             field.setAccessible(true);
-            final Type type = field.getType();
-            final TypeToken<?> typeToken = TypeToken.get(type);
-            final String name = field.getName();
+            final @NotNull Type type = field.getType();
+            final @NotNull TypeToken<?> typeToken = TypeToken.get(type);
+            final @NotNull String name = field.getName();
 
             fieldMap.put(name, new FieldSpec(name, typeToken, field));
         }
+    }
+
+    public FieldSpec getField(final @NotNull String name) {
+
+        return fieldMap.get(name);
     }
 }

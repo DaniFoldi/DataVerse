@@ -3,7 +3,8 @@ package com.danifoldi.dataverse.data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,7 +19,31 @@ public interface NamespacedStorage<T> {
 
     @NotNull CompletableFuture<@Nullable T> get(String key);
 
-    @NotNull CompletableFuture<@NotNull Collection<@NotNull String>> list();
+    default @NotNull CompletableFuture<@NotNull T> getOrCreate(String key, T value) {
+
+        return exists(key).thenCompose(exists -> {
+
+            if (!exists) {
+
+                return create(key, value).thenCompose(e -> get(key));
+            } else {
+
+                return get(key);
+            }
+        });
+    }
+
+    @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys();
+
+    @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys(int pageCount, int pageLength);
+
+    @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+
+    @NotNull CompletableFuture<@NotNull List<@NotNull T>> list();
+
+    @NotNull CompletableFuture<@NotNull List<@NotNull T>> list(int pageCount, int pageLength);
+
+    @NotNull CompletableFuture<@NotNull List<@NotNull T>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
     default @NotNull CompletableFuture<@NotNull Boolean> createOrUpdate(String key, T value) {
 
@@ -29,6 +54,7 @@ public interface NamespacedStorage<T> {
 
     @NotNull CompletableFuture<@NotNull Boolean> delete(String key);
 
+    @NotNull CompletableFuture<@NotNull Boolean> expire(String key, Instant expiry);
 
 
     default @NotNull CompletableFuture<@NotNull Boolean> exists(UUID key) {
@@ -46,6 +72,11 @@ public interface NamespacedStorage<T> {
         return get(key.toString());
     }
 
+    default @NotNull CompletableFuture<@NotNull T> getOrCreate(UUID key, T value) {
+
+        return getOrCreate(key.toString(), value);
+    }
+
     default @NotNull CompletableFuture<@NotNull Boolean> createOrUpdate(UUID key, T value) {
 
         return createOrUpdate(key.toString(), value);
@@ -59,5 +90,10 @@ public interface NamespacedStorage<T> {
     default @NotNull CompletableFuture<@NotNull Boolean> delete(UUID key) {
 
         return delete(key.toString());
+    }
+
+    default @NotNull CompletableFuture<@NotNull Boolean> expire(UUID key, Instant expiry) {
+
+        return expire(key.toString(), expiry);
     }
 }
