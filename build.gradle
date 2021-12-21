@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'net.kyori.blossom' version '1.3.0'
-    id 'com.github.johnrengelman.shadow' version '7.1.0'
+    id 'com.github.johnrengelman.shadow' version '7.1.1'
 }
 
 group 'com.danifoldi'
@@ -22,8 +22,8 @@ dependencies {
     // platforms
     compileOnly 'io.github.waterfallmc:waterfall-api:1.18-R0.1-SNAPSHOT'
     compileOnly 'io.papermc.paper:paper-api:1.18-rc3-R0.1-SNAPSHOT'
-    compileOnly 'com.velocitypowered:velocity-api:3.1.0'
-    annotationProcessor 'com.velocitypowered:velocity-api:3.0.1'
+    compileOnly 'com.velocitypowered:velocity-api:3.1.1'
+    annotationProcessor 'com.velocitypowered:velocity-api:3.1.1'
 
     // db connectors
     implementation 'com.danifoldi:DML:0.0.4'
@@ -56,7 +56,7 @@ blossom {
 }
 
 shadowJar {
-    //minimize()
+    minimize()
 
     relocate 'com.zaxxer.hikari', 'com.danifoldi.dataverse.lib.hikari'
     relocate 'com.danifoldi.dml', 'com.danifoldi.dataverse.lib.dml'

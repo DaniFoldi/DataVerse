@@ -47,7 +47,7 @@ public class DataVerse {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked, unused")
     public <T> @NotNull NamespacedDataVerse<@NotNull T> getNamespacedDataVerse(final @NotNull Namespaced namespaced,
                                                                                final @NotNull String name,
                                                                                final @NotNull Supplier<@NotNull T> instanceSupplier) {
