@@ -235,7 +235,7 @@ public class MySQLDatabaseEngine implements DatabaseEngine {
 
             String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
             String st = """
-                    SELECT `%s`
+                    SELECT %s
                     FROM `%s`
                     WHERE `%s`="%s"
                       AND (`%s` >= NOW() OR `%s` IS NULL);

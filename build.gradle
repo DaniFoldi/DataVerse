@@ -1,11 +1,11 @@
 plugins {
     id 'java'
     id 'net.kyori.blossom' version '1.3.0'
-    id 'com.github.johnrengelman.shadow' version '7.1.1'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 group 'com.danifoldi'
-version '0.2.0-BETA'
+version '0.2.0'
 
 sourceCompatibility = JavaVersion.VERSION_16
 targetCompatibility = JavaVersion.VERSION_16
@@ -21,7 +21,7 @@ repositories {
 dependencies {
     // platforms
     compileOnly 'io.github.waterfallmc:waterfall-api:1.18-R0.1-SNAPSHOT'
-    compileOnly 'io.papermc.paper:paper-api:1.18-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.17-R0.1-SNAPSHOT'
     compileOnly 'com.velocitypowered:velocity-api:3.1.1'
     annotationProcessor 'com.velocitypowered:velocity-api:3.1.1'
 
@@ -56,12 +56,14 @@ blossom {
 }
 
 shadowJar {
-    minimize()
+    //minimize()
 
     relocate 'com.zaxxer.hikari', 'com.danifoldi.dataverse.lib.hikari'
     relocate 'com.danifoldi.dml', 'com.danifoldi.dataverse.lib.dml'
     relocate 'org.mariadb', 'com.danifoldi.dataverse.lib.mariadb'
     relocate 'com.mongodb', 'com.danifoldi.dataverse.lib.mongodb'
+    relocate 'com.google.protobuf', 'com.danifoldi.dataverse.lib.protobuf'
+    relocate 'google.protobuf', 'com.danifoldi.dataverse.lib.protobuf2'
     relocate 'com.mysql', 'com.danifoldi.dataverse.lib.mysql'
     relocate 'org.bson', 'com.danifoldi.dataverse.lib.bson'
     relocate 'javax.inject', 'com.danifoldi.dataverse.lib.inject'
