@@ -32,7 +32,7 @@ public class DataVersePlugin {
     public void onInitialize(ProxyInitializeEvent event) {
 
         DataVerse
-                .setInstance(datafolder.resolve("config.dml"))
+                .setup(datafolder.resolve("config.dml"))
                 .thenAccept(action -> closeDatabaseEngineConnection = action);
     }
 

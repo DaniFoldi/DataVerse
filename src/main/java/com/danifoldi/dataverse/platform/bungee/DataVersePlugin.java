@@ -13,7 +13,7 @@ public class DataVersePlugin extends Plugin {
     public void onEnable() {
 
         DataVerse
-                .setInstance(getDataFolder().toPath().resolve("config.dml"))
+                .setup(getDataFolder().toPath().resolve("config.dml"))
                 .thenAccept(action -> closeDatabaseEngineConnection = action);
     }
 

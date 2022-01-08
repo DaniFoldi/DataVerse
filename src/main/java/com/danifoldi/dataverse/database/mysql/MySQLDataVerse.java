@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -37,46 +38,55 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
 
     @Override
     public @NotNull CompletableFuture<@Nullable T> get(String key) {
+
         return databaseEngine.get(namespace, key, instanceSupplier.get(), fieldMap);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys() {
+
         return databaseEngine.keys(namespace);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys(int pageCount, int pageLength) {
+
         return databaseEngine.keys(namespace, pageCount, pageLength);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
         return databaseEngine.keys(namespace, pageCount, pageLength, sortKey, reverse);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> list() {
+    public @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list() {
+
         return databaseEngine.list(namespace, instanceSupplier, fieldMap);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> list(int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list(int pageCount, int pageLength) {
+
         return databaseEngine.list(namespace, instanceSupplier, fieldMap, pageCount, pageLength);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
         return databaseEngine.list(namespace, instanceSupplier, fieldMap, pageCount, pageLength, sortKey, reverse);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull Boolean> update(String key, T value) {
+
         return databaseEngine.update(namespace, key, value, fieldMap);
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull Boolean> delete(String key) {
+
         return databaseEngine.delete(namespace, key);
     }
 

@@ -3,10 +3,12 @@ package com.danifoldi.dataverse;
 import com.danifoldi.dataverse.config.Config;
 import com.danifoldi.dataverse.data.Namespaced;
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
+import com.danifoldi.dataverse.data.NamespacedMultiDataVerse;
 import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.danifoldi.dataverse.database.StorageType;
 import com.danifoldi.dataverse.database.mysql.MySQLDataVerse;
 import com.danifoldi.dataverse.database.mysql.MySQLDatabaseEngine;
+import com.danifoldi.dataverse.database.mysql.MySQLMultiDataVerse;
 import com.danifoldi.dataverse.translation.TranslationEngine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,10 +25,11 @@ import java.util.logging.Logger;
 public class DataVerse {
 
     private final @NotNull Map<@NotNull String, @NotNull NamespacedDataVerse<?>> cache = new ConcurrentHashMap<>();
+    private final @NotNull Map<@NotNull String, @NotNull NamespacedMultiDataVerse<?>> multiCache = new ConcurrentHashMap<>();
     private @Nullable DatabaseEngine databaseEngine = null;
-    private @NotNull TranslationEngine translationEngine = new TranslationEngine();
+    private final @NotNull TranslationEngine translationEngine = new TranslationEngine();
     private @Nullable StorageType storageType;
-    private @NotNull Logger logger = Logger.getLogger("DataVerse DatabaseEngine");
+    private final @NotNull Logger logger = Logger.getLogger("DataVerse DatabaseEngine");
 
     private DataVerse() {
 
@@ -59,11 +62,32 @@ public class DataVerse {
                 );
     }
 
+    @SuppressWarnings("unchecked, unused")
+    public <T> @NotNull NamespacedMultiDataVerse<@NotNull T> getNamespacedMultiDataVerse(final @NotNull Namespaced namespaced,
+                                                                               final @NotNull String name,
+                                                                               final @NotNull Supplier<@NotNull T> instanceSupplier) {
+
+        return (NamespacedMultiDataVerse<T>)
+                multiCache.computeIfAbsent(
+                        String.format("%s_%s", namespaced.getNamespace(), name),
+                        namespaceName -> createNamespacedMultiDataVerse(namespaceName, instanceSupplier)
+                );
+    }
+
     private <T> @NotNull NamespacedDataVerse<@NotNull T> createNamespacedDataVerse(String namespace, Supplier<T> instanceSupplier) {
 
         return switch (storageType) {
 
             case MYSQL -> new MySQLDataVerse<>((MySQLDatabaseEngine)databaseEngine, namespace, instanceSupplier);
+            default -> null;
+        };
+    }
+
+    private <T> @NotNull NamespacedMultiDataVerse<@NotNull T> createNamespacedMultiDataVerse(String namespace, Supplier<T> instanceSupplier) {
+
+        return switch (storageType) {
+
+            case MYSQL -> new MySQLMultiDataVerse<>((MySQLDatabaseEngine)databaseEngine, namespace, instanceSupplier);
             default -> null;
         };
     }
@@ -89,7 +113,13 @@ public class DataVerse {
         return instance;
     }
 
-    public static @NotNull CompletableFuture<@NotNull Runnable> setInstance(final @NotNull Path configFile) {
+    public static @NotNull CompletableFuture<@NotNull Runnable> setup(final @NotNull Path configFile) {
+
+        if (instance != null) {
+
+            // todo warn
+            return CompletableFuture.failedFuture(new IllegalStateException("DataVerse instance has already been set."));
+        }
 
         try {
 
@@ -101,12 +131,6 @@ public class DataVerse {
         }
 
         Map<String, String> config = Config.getConfig(configFile);
-
-        if (instance != null) {
-
-            // todo warn
-            return CompletableFuture.failedFuture(new IllegalStateException("DataVerse instance has already been set."));
-        }
 
         return CompletableFuture.supplyAsync(() -> {
 
