@@ -27,7 +27,7 @@ dependencies {
 
     // db connectors
     implementation 'com.danifoldi:DML:1.0.0'
-    implementation ('com.zaxxer:HikariCP:5.0.0') {
+    implementation ('com.zaxxer:HikariCP:5.0.1') {
         exclude module: 'slf4j-api'
     }
     implementation 'org.mariadb.jdbc:mariadb-java-client:2.7.4'
