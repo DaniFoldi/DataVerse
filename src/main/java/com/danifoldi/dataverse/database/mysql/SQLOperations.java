@@ -3,9 +3,7 @@ package com.danifoldi.dataverse.database.mysql;
 import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.danifoldi.dataverse.translation.TranslationEngine;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
+import com.danifoldi.dataverse.util.Pair;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.pool.HikariPool;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +17,6 @@ import java.sql.Types;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -202,6 +199,7 @@ public class SQLOperations implements DatabaseEngine {
 
             List<String> keys = new ArrayList<>();
             while (results.next()) {
+
                 keys.add(columnName(ColumnNames.KEY));
             }
             return keys;
@@ -212,7 +210,7 @@ public class SQLOperations implements DatabaseEngine {
         }
     }
 
-    <T> Map<String, T> executeListQuery(String st, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
+    <T> List<Pair<String, T>> executeListQuery(String st, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
 
         logger.fine("Executing statement %s".formatted(st));
 
@@ -220,41 +218,19 @@ public class SQLOperations implements DatabaseEngine {
              final @NotNull PreparedStatement statement = connection.prepareStatement(st);
              final @NotNull ResultSet results = statement.executeQuery()) {
 
-            Map<String, T> values = new LinkedHashMap<>();
+            List<Pair<String, T>> values = new ArrayList<>();
             while (results.next()) {
+
                 T value = instanceSupplier.get();
                 String key = results.getString(columnName("key"));
                 setResultValues(results, value, fieldMap);
-                values.put(key, value);
+                values.add(Pair.of(key, value));
             }
             return values;
         } catch (SQLException e) {
 
             logger.severe(e.getMessage());
-            return Collections.emptyMap();
-        }
-    }
-
-    <T> Multimap<String, T> executeMultiListQuery(String st, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
-
-        logger.fine("Executing statement %s".formatted(st));
-
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement(st);
-             final @NotNull ResultSet results = statement.executeQuery()) {
-
-            Multimap<String, T> values = ArrayListMultimap.create();
-            while (results.next()) {
-                T value = instanceSupplier.get();
-                String key = results.getString(columnName("key"));
-                setResultValues(results, value, fieldMap);
-                values.put(key, value);
-            }
-            return values;
-        } catch (SQLException e) {
-
-            logger.severe(e.getMessage());
-            return ArrayListMultimap.create();
+            return Collections.emptyList();
         }
     }
 

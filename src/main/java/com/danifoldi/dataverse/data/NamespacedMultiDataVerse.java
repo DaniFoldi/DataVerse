@@ -1,11 +1,10 @@
 package com.danifoldi.dataverse.data;
 
-import com.google.common.collect.Multimap;
+import com.danifoldi.dataverse.util.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -36,11 +35,11 @@ public abstract class NamespacedMultiDataVerse<T> extends FieldMappable<T> {
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull Multimap<@NotNull String, @NotNull T>> list();
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list();
 
-    public abstract @NotNull CompletableFuture<@NotNull Multimap<@NotNull String, @NotNull T>> list(int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list(int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull Multimap<@NotNull String, @NotNull T>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
     public abstract @NotNull CompletableFuture<@NotNull Boolean> delete(String key, T value);
 

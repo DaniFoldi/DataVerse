@@ -1,7 +1,7 @@
 package com.danifoldi.dataverse.database.mysql;
 
 import com.danifoldi.dataverse.data.FieldSpec;
-import com.google.common.collect.Multimap;
+import com.danifoldi.dataverse.util.Pair;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -96,7 +96,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<Map<String, T>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
+    <T> CompletableFuture<List<Pair<String, T>>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -111,7 +111,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<Map<String, T>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength) {
+    <T> CompletableFuture<List<Pair<String, T>>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -128,7 +128,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<Map<String, T>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    <T> CompletableFuture<List<Pair<String, T>>> list(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -144,57 +144,6 @@ public class MySQLDatabaseEngine extends SQLOperations {
              """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columnName(sortKey.type().toString(), sortKey.name()), reverse ? "DESC" : "ASC", pageLength, (pageCount - 1) * pageLength);
 
             return executeListQuery(st, instanceSupplier, fieldMap);
-        });
-    }
-
-    <T> CompletableFuture<Multimap<String, T>> multiList(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
-
-        return CompletableFuture.supplyAsync(() -> {
-
-            //language=MySQL
-            String st = """
-                    SELECT *
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL);
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
-
-            return executeMultiListQuery(st, instanceSupplier, fieldMap);
-        });
-    }
-
-    <T> CompletableFuture<Multimap<String, T>> multiList(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength) {
-
-        return CompletableFuture.supplyAsync(() -> {
-
-            //language=MySQL
-            String st = """
-                    SELECT *
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
-                    LIMIT %d
-                    OFFSET %d;
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), pageLength, (pageCount - 1) * pageLength);
-
-            return executeMultiListQuery(st, instanceSupplier, fieldMap);
-        });
-    }
-
-    <T> CompletableFuture<Multimap<String, T>> multiList(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return CompletableFuture.supplyAsync(() -> {
-
-            //language=MySQL
-            String st = """
-                    SELECT *
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
-                    ORDER BY `%s`
-                    %s
-                    LIMIT %d
-                    OFFSET %d;
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columnName(sortKey.type().toString(), sortKey.name()), reverse ? "DESC" : "ASC", pageLength, (pageCount - 1) * pageLength);
-
-            return executeMultiListQuery(st, instanceSupplier, fieldMap);
         });
     }
 

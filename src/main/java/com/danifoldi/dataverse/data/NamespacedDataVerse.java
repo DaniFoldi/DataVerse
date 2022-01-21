@@ -1,11 +1,11 @@
 package com.danifoldi.dataverse.data;
 
+import com.danifoldi.dataverse.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -45,11 +45,11 @@ public abstract class NamespacedDataVerse<T> extends FieldMappable<T> {
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull String>> keys(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list();
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list();
 
-    public abstract @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list(int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list(int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
     public @NotNull CompletableFuture<@NotNull Boolean> createOrUpdate(String key, T value) {
 

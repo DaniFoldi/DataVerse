@@ -6,28 +6,37 @@ import java.util.Objects;
 
 public class Pair<A, B> {
 
-    private final A a;
-    private final B b;
+    private final @NotNull A first;
+    private final @NotNull B second;
 
-    private Pair(A a, B b) {
+    private Pair(@NotNull A a, @NotNull B b) {
 
-        this.a = a;
-        this.b = b;
+        this.first = a;
+        this.second = b;
     }
 
     public A getFirst() {
 
-        return a;
+        return first;
     }
 
     public B getSecond() {
 
-        return b;
+        return second;
     }
 
-    public static<A, B> @NotNull Pair<A, B> of(A a, B b) {
+    public static<A, B> @NotNull Pair<@NotNull A, @NotNull B> of(final @NotNull A a, final @NotNull B b) {
 
         return new Pair<>(a, b);
+    }
+
+    @Override
+    public String toString() {
+
+        return "Pair{" +
+                "first=" + first +
+                ", second=" + second +
+                '}';
     }
 
     @Override
@@ -36,12 +45,12 @@ public class Pair<A, B> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Pair<?, ?> pair = (Pair<?, ?>) o;
-        return Objects.equals(a, pair.a) && Objects.equals(b, pair.b);
+        return first.equals(pair.first) && second.equals(pair.second);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(a, b);
+        return Objects.hash(first, second);
     }
 }

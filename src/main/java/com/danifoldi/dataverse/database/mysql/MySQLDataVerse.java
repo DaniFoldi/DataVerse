@@ -2,12 +2,12 @@ package com.danifoldi.dataverse.database.mysql;
 
 import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
+import com.danifoldi.dataverse.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -61,19 +61,19 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list() {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list() {
 
         return databaseEngine.list(namespace, instanceSupplier, fieldMap);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list(int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list(int pageCount, int pageLength) {
 
         return databaseEngine.list(namespace, instanceSupplier, fieldMap, pageCount, pageLength);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull Map<@NotNull String, @NotNull T>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> list(int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return databaseEngine.list(namespace, instanceSupplier, fieldMap, pageCount, pageLength, sortKey, reverse);
     }
@@ -92,6 +92,7 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
 
     @Override
     public @NotNull CompletableFuture<@NotNull Boolean> expire(String key, Instant expiry) {
+
         return databaseEngine.expire(namespace, key, expiry);
     }
 }
