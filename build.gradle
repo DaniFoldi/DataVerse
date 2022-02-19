@@ -31,14 +31,14 @@ dependencies {
     implementation ('com.zaxxer:HikariCP:5.0.1') {
         exclude module: 'slf4j-api'
     }
-    implementation 'org.mariadb.jdbc:mariadb-java-client:2.7.5'
+    implementation 'org.mariadb.jdbc:mariadb-java-client:3.0.3'
     implementation 'org.mongodb:mongo-java-driver:3.12.10'
     implementation 'mysql:mysql-connector-java:8.0.28'
 
     // inject system
     implementation 'javax.inject:javax.inject:1'
-    implementation 'com.google.dagger:dagger:2.40.5'
-    annotationProcessor 'com.google.dagger:dagger-compiler:2.40.5'
+    implementation 'com.google.dagger:dagger:2.41'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.41'
 
     // intellij
     compileOnly 'org.jetbrains:annotations:23.0.0'
