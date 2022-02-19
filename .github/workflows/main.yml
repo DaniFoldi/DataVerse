@@ -1,0 +1,19 @@
+name: Publish latest release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  java-release:
+    if: startsWith( github.event.commits[0].message, '[ci release]' )
+    uses: DaniFoldi/workflows/.github/workflows/gradle.yml@main
+    with:
+      steps: "clean build publish"
+      java-version: 17
+      github-release-files: "build/libs/*.jar"
+      add-gradle-properties: true
+    secrets:
+      gradle-properties: "user=${{ secrets.NEXUS_USER }}\npassword=${{ secrets.NEXUS_PASSWORD }}"
+      github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,8 +1,8 @@
 package com.danifoldi.dataverse.config;
 
 import com.danifoldi.dataverse.DataVerse;
-import com.danifoldi.dml.DmlParseException;
 import com.danifoldi.dml.DmlParser;
+import com.danifoldi.dml.exception.DmlParseException;
 import com.danifoldi.dml.type.DmlObject;
 import com.danifoldi.dml.type.DmlString;
 import com.danifoldi.dml.type.DmlValue;
@@ -26,10 +26,12 @@ public class Config {
             dmlConfig.keys().forEach(k -> {
                 DmlValue value = dmlConfig.get(k);
                 if (value instanceof DmlString) {
+
                     config.put(k.value(), value.asString().value());
                 } else {
+
                     DmlObject object = value.asObject();
-                    object.keys().forEach(k2 -> config.put("%s_%s".formatted(k.value(), k2.value()), object.get(k2).asString().value()));
+                    object.keys().forEach(k2 -> config.put("%s_%s".formatted(k.value(), k2.value()), object.getString(k2).value()));
                 }
             });
 

@@ -2,13 +2,14 @@ plugins {
     id 'java'
     id 'net.kyori.blossom' version '1.3.0'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'maven-publish'
 }
 
 group 'com.danifoldi'
 version '0.4.0'
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()
@@ -26,7 +27,7 @@ dependencies {
     annotationProcessor 'com.velocitypowered:velocity-api:3.1.1'
 
     // db connectors
-    implementation 'com.danifoldi:DML:1.0.0'
+    implementation 'com.danifoldi:DML:1.0.2'
     implementation ('com.zaxxer:HikariCP:5.0.1') {
         exclude module: 'slf4j-api'
     }
@@ -70,4 +71,45 @@ shadowJar {
     relocate 'dagger', 'com.danifoldi.dataverse.lib.dagger'
 
     getArchiveFileName().set("${project.name}-${project.version}.jar")
+}
+
+tasks.withType(PublishToMavenRepository) { task ->
+    dependsOn("shadowJar")
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId = 'DataVerse'
+
+            artifact('build/libs/' + project.name + '-' + project.version + '.jar') {
+                extension 'jar'
+            }
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+
+            pom {
+                name = 'DataVerse'
+                description = 'A database engine supporting many platforms'
+                url = 'https://github.com/DaniFoldi/DataVerse'
+            }
+        }
+    }
+    repositories {
+        maven {
+            name 'danifoldi'
+            url 'https://repo.danifoldi.com/repository/maven-releases/'
+            credentials {
+                username project.user
+                password project.password
+            }
+        }
+    }
 }
