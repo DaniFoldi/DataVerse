@@ -33,7 +33,7 @@ dependencies {
     }
     implementation 'org.mariadb.jdbc:mariadb-java-client:3.0.4'
     implementation 'org.mongodb:mongo-java-driver:3.12.11'
-    implementation 'mysql:mysql-connector-java:8.0.28'
+    implementation 'mysql:mysql-connector-java:8.0.29'
 
     // inject system
     implementation 'javax.inject:javax.inject:1'
