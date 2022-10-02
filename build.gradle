@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     // platforms
-    compileOnly 'io.github.waterfallmc:waterfall-api:1.18-R0.1-SNAPSHOT'
+    compileOnly 'io.github.waterfallmc:waterfall-api:1.19-R0.1-SNAPSHOT'
     compileOnly 'io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT'
     compileOnly 'com.velocitypowered:velocity-api:3.1.1'
     annotationProcessor 'com.velocitypowered:velocity-api:3.1.1'
@@ -33,7 +33,7 @@ dependencies {
     }
     implementation 'org.mariadb.jdbc:mariadb-java-client:3.0.4'
     implementation 'org.mongodb:mongo-java-driver:3.12.11'
-    implementation 'mysql:mysql-connector-java:8.0.29'
+    implementation 'mysql:mysql-connector-java:8.0.30'
 
     // inject system
     implementation 'javax.inject:javax.inject:1'
