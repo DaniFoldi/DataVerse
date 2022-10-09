@@ -73,18 +73,21 @@ shadowJar {
     getArchiveFileName().set("${project.name}-${project.version}.jar")
 }
 
-tasks.withType(PublishToMavenRepository) { task ->
-    dependsOn("shadowJar")
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
 }
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
             artifactId = 'DataVerse'
-
-            artifact('build/libs/' + project.name + '-' + project.version + '.jar') {
-                extension 'jar'
-            }
+            from components.java
+            artifact sourcesJar
 
             versionMapping {
                 usage('java-api') {
@@ -94,22 +97,29 @@ publishing {
                     fromResolutionResult()
                 }
             }
-
             pom {
                 name = 'DataVerse'
                 description = 'A database engine supporting many platforms'
                 url = 'https://github.com/DaniFoldi/DataVerse'
             }
+
+            pom.withXml {
+                asNode().dependencies.'*'.findAll() {
+                    it.scope.text() == 'runtime'  && project.configurations.default.allDependencies.find { dep ->
+                        dep.name == it.artifactId.text()
+                    }
+                }.each() {
+                    it.scope*.value = 'compile'
+                }
+            }
         }
     }
+
     repositories {
         maven {
-            name 'danifoldi'
-            url 'https://repo.danifoldi.com/repository/maven-releases/'
-            credentials {
-                username project.user
-                password project.password
-            }
+            def releasesRepoUrl = layout.buildDirectory.dir('repos/releases')
+            def snapshotsRepoUrl = layout.buildDirectory.dir('repos/snapshots')
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
         }
     }
 }
