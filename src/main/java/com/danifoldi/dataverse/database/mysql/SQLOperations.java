@@ -3,7 +3,7 @@ package com.danifoldi.dataverse.database.mysql;
 import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.danifoldi.dataverse.translation.TranslationEngine;
-import com.danifoldi.dataverse.util.Pair;
+import com.danifoldi.microbase.util.Pair;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.pool.HikariPool;
 import org.jetbrains.annotations.NotNull;
@@ -23,12 +23,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class SQLOperations implements DatabaseEngine {
 
-    private HikariPool connectionPool;
-    private TranslationEngine translationEngine;
-    private Logger logger;
+    protected HikariPool connectionPool;
+    protected TranslationEngine translationEngine;
+    protected Logger logger;
 
     @Override
     public void setLogger(@NotNull Logger logger) {
@@ -103,15 +104,26 @@ public class SQLOperations implements DatabaseEngine {
         //language=MySQL
         String st = """
                     CREATE EVENT IF NOT EXISTS
-                      `%s`
+                      ?
                     ON SCHEDULE EVERY 1 HOUR
                     DO
                     DELETE FROM
-                      `%s`
-                    WHERE `%s` < NOW();
-             """.formatted(eventName(namespace, "ttl"), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP));
+                      ?
+                    WHERE ? < NOW();
+                    """;
 
-        executeStatement(st);
+        try (final @NotNull Connection connection = connectionPool.getConnection();
+             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+            statement.setString(1, eventName(namespace, "ttl"));
+            statement.setString(2, tableName(namespace));
+            statement.setString(3, columnName(ColumnNames.TTL_TIMESTAMP));
+
+            statement.execute();
+        } catch (SQLException e) {
+
+            logger.severe(e.getMessage());
+        }
     }
 
     String tableName(String namespace) {
@@ -134,143 +146,47 @@ public class SQLOperations implements DatabaseEngine {
         return "%s_%s".formatted(type, name).toLowerCase(Locale.ROOT).replaceAll("\s", "").replace(".",  "_");
     }
 
-    <T> boolean executeStatement(String st, T value, Map<String, FieldSpec> fieldMap) {
+    void setColumnNames(PreparedStatement statement, List<String> names, Map<String, FieldSpec> fieldMap, AtomicInteger c) {
 
-        logger.fine("Executing statement %s".formatted(st));
+        try {
 
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+            for (String name: names) {
 
-            setStatementValues(statement, value, fieldMap);
-            statement.execute();
-
-            return true;
-        } catch (SQLException e) {
-
-            logger.severe(e.getMessage());
-            return false;
-        }
-    }
-
-    boolean executeStatement(String st) {
-
-        logger.fine("Executing statement %s".formatted(st));
-
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
-
-            statement.execute();
-
-            return true;
-        } catch (SQLException e) {
-
-            logger.severe(e.getMessage());
-            return false;
-        }
-    }
-
-    <T> T executeQuery(String st, T empty, Map<String, FieldSpec> fieldMap) {
-        logger.fine("Executing statement %s".formatted(st));
-
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement(st);
-             final @NotNull ResultSet results = statement.executeQuery()) {
-
-            if (!results.next()) {
-
-                return null;
+                statement.setString(c.getAndIncrement(), columnName(fieldMap.get(name).type().toString(), name));
             }
-            setResultValues(results, empty, fieldMap);
-            return empty;
         } catch (SQLException e) {
 
             logger.severe(e.getMessage());
-            return null;
         }
     }
 
-    List<String> executeKeyQuery(String st) {
+    void setStatementValues(PreparedStatement statement, Object value, List<String> names, Map<String, FieldSpec> fieldMap, AtomicInteger i) {
 
-        logger.fine("Executing statement %s".formatted(st));
+        try {
 
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement(st);
-             final @NotNull ResultSet results = statement.executeQuery()) {
+            for (String name: names) {
 
-            List<String> keys = new ArrayList<>();
-            while (results.next()) {
-
-                keys.add(columnName(ColumnNames.KEY));
+                translationEngine.getJavaTypeToMysqlQuery(fieldMap.get(name).type().toString()).apply(statement, i.getAndIncrement(), fieldMap.get(name), value);
             }
-            return keys;
-        } catch (SQLException e) {
+        } catch (ReflectiveOperationException | SQLException e) {
 
             logger.severe(e.getMessage());
-            return Collections.emptyList();
         }
     }
 
-    <T> List<Pair<String, T>> executeListQuery(String st, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap) {
+    void setSelectRow(PreparedStatement statement, Object value, List<String> names, Map<String, FieldSpec> fieldMap, AtomicInteger i) {
 
-        logger.fine("Executing statement %s".formatted(st));
+        try {
 
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement(st);
-             final @NotNull ResultSet results = statement.executeQuery()) {
+            for (String name: names) {
 
-            List<Pair<String, T>> values = new ArrayList<>();
-            while (results.next()) {
-
-                T value = instanceSupplier.get();
-                String key = results.getString(columnName("key"));
-                setResultValues(results, value, fieldMap);
-                values.add(Pair.of(key, value));
+                statement.setString(i.getAndIncrement(), columnName(fieldMap.get(name).type().toString(), name));
+                translationEngine.getJavaTypeToMysqlQuery(fieldMap.get(name).type().toString()).apply(statement, i.getAndIncrement(), fieldMap.get(name), value);
             }
-            return values;
-        } catch (SQLException e) {
+        } catch (ReflectiveOperationException | SQLException e) {
 
             logger.severe(e.getMessage());
-            return Collections.emptyList();
         }
-    }
-
-    boolean executeExpiryUpdate(String st, Instant expiry) {
-
-        logger.fine("Executing statement %s".formatted(st));
-
-        try (final @NotNull Connection connection = connectionPool.getConnection();
-             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
-
-            if (expiry == null) {
-
-                statement.setNull(1, Types.TIMESTAMP);
-            } else {
-
-                statement.setTimestamp(1, Timestamp.from(expiry));
-            }
-            statement.execute();
-            return true;
-        } catch (SQLException e) {
-
-            logger.severe(e.getMessage());
-            return false;
-        }
-    }
-
-    void setStatementValues(PreparedStatement statement, Object value, Map<String, FieldSpec> fieldMap) {
-
-        AtomicInteger i = new AtomicInteger(1);
-        fieldMap.forEach((name, spec) -> {
-
-            try {
-
-                String typeName = spec.type().toString();
-                translationEngine.getJavaTypeToMysqlQuery(typeName).apply(statement, i.getAndIncrement(), spec, value);
-            } catch (ReflectiveOperationException | SQLException e) {
-
-                logger.severe(e.getMessage());
-            }
-        });
     }
 
     void setResultValues(ResultSet result, Object value, Map<String, FieldSpec> fieldMap) {
@@ -289,53 +205,93 @@ public class SQLOperations implements DatabaseEngine {
 
     void createTable(String namespace, Map<String, FieldSpec> fieldMap) {
 
-        StringBuilder columns = new StringBuilder();
-        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.type().toString(), name), translationEngine.getMysqlColumn(spec.type().toString()))));
-
         //language=MySQL
         String st = """
                     CREATE TABLE IF NOT EXISTS
-                    `%s`
+                    ?
                      (
-                     `%s` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-                     `%s` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                     `%s` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                     `%s` TIMESTAMP NULL DEFAULT NULL,
+                     ? VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+                     ? TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                     ? TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                     ? TIMESTAMP NULL DEFAULT NULL,
                      %s
                      
-                     PRIMARY KEY (`%s`)
+                     PRIMARY KEY (?)
                      )
                      ENGINE = InnoDB
                      CHARSET = utf8mb4
                      COLLATE utf8mb4_unicode_ci;
-             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), columnName(ColumnNames.CREATE_TIMESTAMP), columnName(ColumnNames.UPDATE_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columns.toString(), columnName(ColumnNames.KEY));
+             """.formatted("? ?,\n".repeat(fieldMap.size()));
 
-        executeStatement(st);
+        try (final @NotNull Connection connection = connectionPool.getConnection();
+             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+            AtomicInteger c = new AtomicInteger(6);
+
+            statement.setString(c.getAndIncrement(), tableName(namespace));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.CREATE_TIMESTAMP));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.UPDATE_TIMESTAMP));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+            for (Map.Entry<String, FieldSpec> field: fieldMap.entrySet()) {
+
+                statement.setString(c.getAndIncrement(), columnName(field.getValue().type().toString(), field.getKey()));
+                statement.setString(c.getAndIncrement(), translationEngine.getMysqlColumn(field.getValue().type().toString()));
+            }
+
+            statement.setString(c.get(), columnName(ColumnNames.KEY));
+
+            statement.execute();
+        } catch (SQLException e) {
+
+            logger.severe(e.getMessage());
+        }
     }
 
     void createMultiTable(String namespace, Map<String, FieldSpec> fieldMap) {
 
-        StringBuilder columns = new StringBuilder();
-        fieldMap.forEach((name, spec) -> columns.append("`%s` %s,\n".formatted(columnName(spec.type().toString(), name), translationEngine.getMysqlColumn(spec.type().toString()))));
-
         //language=MySQL
         String st = """
                     CREATE TABLE IF NOT EXISTS
-                    `%s`
+                    ?
                      (
-                     `%s` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-                     `%s` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                     `%s` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                     `%s` TIMESTAMP NULL DEFAULT NULL,
+                     ? VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+                     ? TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                     ? TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                     ? TIMESTAMP NULL DEFAULT NULL,
                      %s
                      
-                     INDEX (`%s`)
+                     INDEX (?)
                      )
                      ENGINE = InnoDB
                      CHARSET = utf8mb4
                      COLLATE utf8mb4_unicode_ci;
-             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), columnName(ColumnNames.CREATE_TIMESTAMP), columnName(ColumnNames.UPDATE_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columns.toString(), columnName(ColumnNames.KEY));
+             """.formatted("? ?,\n".repeat(fieldMap.size()));
 
-        executeStatement(st);
+        try (final @NotNull Connection connection = connectionPool.getConnection();
+             final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+            AtomicInteger c = new AtomicInteger(1);
+
+            statement.setString(c.getAndIncrement(), tableName(namespace));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.CREATE_TIMESTAMP));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.UPDATE_TIMESTAMP));
+            statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+            for (Map.Entry<String, FieldSpec> field: fieldMap.entrySet()) {
+
+                statement.setString(c.getAndIncrement(), columnName(field.getValue().type().toString(), field.getKey()));
+                statement.setString(c.getAndIncrement(), translationEngine.getMysqlColumn(field.getValue().type().toString()));
+            }
+
+            statement.setString(c.get(), columnName(ColumnNames.KEY));
+
+            statement.execute();
+        } catch (SQLException e) {
+
+            logger.severe(e.getMessage());
+        }
     }
 }

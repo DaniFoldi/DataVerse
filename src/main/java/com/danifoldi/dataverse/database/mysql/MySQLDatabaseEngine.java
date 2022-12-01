@@ -1,13 +1,22 @@
 package com.danifoldi.dataverse.database.mysql;
 
 import com.danifoldi.dataverse.data.FieldSpec;
-import com.danifoldi.dataverse.util.Pair;
+import com.danifoldi.microbase.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -17,14 +26,31 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
             //language=MySQL
             String st = """
-                    INSERT INTO `%s`
-                    (`%s`, %s) VALUES ("%s", %s);
-             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), columns, key, String.join(", ", Collections.nCopies(fieldMap.size(), "?")));
+                    INSERT INTO ?
+                    (?, %s) VALUES (?, %s);
+             """.formatted(String.join(", ", Collections.nCopies(fieldMap.size(), "?")), String.join(", ", Collections.nCopies(fieldMap.size(), "?")));
 
-            return executeStatement(st, value, fieldMap);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+                List<String> names = fieldMap.keySet().stream().toList();
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                setColumnNames(statement, names, fieldMap, c);
+                statement.setString(c.getAndIncrement(), key);
+                setStatementValues(statement, value, names, fieldMap, c);
+                statement.execute();
+
+                return true;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return false;
+            }
         });
     }
 
@@ -32,16 +58,40 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            String columns = fieldMap.entrySet().stream().map(e -> "`%s`".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
             //language=MySQL
             String st = """
                     SELECT %s
-                    FROM `%s`
-                    WHERE `%s` = "%s"
-                      AND (`%s` >= NOW() OR `%s` IS NULL);
-             """.formatted(columns, tableName(namespace), columnName(ColumnNames.KEY), key, columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+                    FROM ?
+                    WHERE ? = ?
+                      AND (? >= NOW() OR ? IS NULL);
+             """.formatted(String.join(", ", Collections.nCopies(fieldMap.size(), "?")));
 
-            return executeQuery(st, empty, fieldMap);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+                List<String> names = fieldMap.keySet().stream().toList();
+
+                setColumnNames(statement, names, fieldMap, c);
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+
+                    return null;
+                }
+                setResultValues(results, empty, fieldMap);
+                return empty;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return null;
+            }
         });
     }
 
@@ -51,12 +101,34 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
             //language=MySQL
             String st = """
-                    SELECT DISTINCT `%s`
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL);
-             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+                    SELECT DISTINCT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL);
+             """;
 
-            return executeKeyQuery(st);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<String> keys = new ArrayList<>();
+                while (results.next()) {
+
+                    keys.add(columnName(ColumnNames.KEY));
+                }
+                return keys;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
         });
     }
 
@@ -66,14 +138,38 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
             //language=MySQL
             String st = """
-                    SELECT `%s`
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
-                    LIMIT %d
-                    OFFSET %d;
-             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), pageLength, (pageCount - 1) * pageLength);
+                    SELECT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                    LIMIT ?
+                    OFFSET ?;
+             """;
 
-            return executeKeyQuery(st);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<String> keys = new ArrayList<>();
+                while (results.next()) {
+
+                    keys.add(columnName(ColumnNames.KEY));
+                }
+                return keys;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
         });
     }
 
@@ -83,16 +179,42 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
             //language=MySQL
             String st = """
-                    SELECT `%s`
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
-                    ORDER BY `%s`
-                    %s
-                    LIMIT %d
-                    OFFSET %d;
-             """.formatted(columnName(ColumnNames.KEY), tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columnName(sortKey.type().toString(), sortKey.name()), reverse ? "DESC" : "ASC", pageLength, (pageCount - 1) * pageLength);
+                    SELECT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                    ORDER BY ?
+                    ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
 
-            return executeKeyQuery(st);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(sortKey.type().toString(), sortKey.name()));
+                statement.setString(c.getAndIncrement(), reverse ? "DESC" : "ASC");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<String> keys = new ArrayList<>();
+                while (results.next()) {
+
+                    keys.add(columnName(ColumnNames.KEY));
+                }
+                return keys;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
         });
     }
 
@@ -103,11 +225,35 @@ public class MySQLDatabaseEngine extends SQLOperations {
             //language=MySQL
             String st = """
                     SELECT *
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL);
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL);
+             """;
 
-            return executeListQuery(st, instanceSupplier, fieldMap);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String key = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
         });
     }
 
@@ -118,13 +264,40 @@ public class MySQLDatabaseEngine extends SQLOperations {
             //language=MySQL
             String st = """
                     SELECT *
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
-                    LIMIT %d
-                    OFFSET %d;
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), pageLength, (pageCount - 1) * pageLength);
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                    LIMIT ?
+                    OFFSET ?;
+             """;
 
-            return executeListQuery(st, instanceSupplier, fieldMap);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String key = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
         });
     }
 
@@ -135,15 +308,43 @@ public class MySQLDatabaseEngine extends SQLOperations {
             //language=MySQL
             String st = """
                     SELECT *
-                    FROM `%s`
-                    WHERE (`%s` >= NOW() OR `%s` IS NULL)
-                    ORDER BY `%s`
-                    %s
-                    LIMIT %d
-                    OFFSET %d;
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP), columnName(sortKey.type().toString(), sortKey.name()), reverse ? "DESC" : "ASC", pageLength, (pageCount - 1) * pageLength);
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                    ORDER BY ?
+                    ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
 
-            return executeListQuery(st, instanceSupplier, fieldMap);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(sortKey.type().toString(), sortKey.name()));
+                statement.setString(c.getAndIncrement(), reverse ? "DESC" : "ASC");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String key = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
         });
     }
 
@@ -151,16 +352,33 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            String values = fieldMap.entrySet().stream().map(e -> "`%s` = ?".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(", "));
             //language=MySQL
             String st = """
-                    UPDATE `%s`
+                    UPDATE ?
                     SET %s
-                    WHERE `%s` = "%s"
-                      AND (`%s` >= NOW() OR `%s` IS NULL);
-             """.formatted(tableName(namespace), values, columnName(ColumnNames.KEY), key, columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+                    WHERE ? = ?
+                      AND (? >= NOW() OR ? IS NULL);
+             """.formatted(String.join(", ", Collections.nCopies(fieldMap.size(), "? = ?")));
 
-            return executeStatement(st, value, fieldMap);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                setSelectRow(statement, value, fieldMap.keySet().stream().toList(), fieldMap, c);
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.execute();
+
+                return true;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return false;
+            }
         });
     }
 
@@ -170,12 +388,30 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
             //language=MySQL
             String st = """
-                    DELETE FROM `%s`
-                    WHERE `%s` = `%s`
-                      AND (`%s` >= NOW() OR `%s` IS NULL);
-             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), key, columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+                    DELETE FROM ?
+                    WHERE ? = ?
+                      AND (? >= NOW() OR ? IS NULL);
+             """;
 
-            return executeStatement(st);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                statement.execute();
+
+                return true;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return false;
+            }
         });
     }
 
@@ -183,16 +419,33 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            String values = fieldMap.entrySet().stream().map(e -> "`%s` = ?".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(" AND "));
             //language=MySQL
             String st = """
-                    DELETE FROM `%s`
-                    WHERE `%s` = `%s`
+                    DELETE FROM ?
+                    WHERE ? = ?
                       AND %s
-                      AND (`%s` >= NOW() OR `%s` IS NULL);
-             """.formatted(tableName(namespace), columnName(ColumnNames.KEY), key, values, columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.TTL_TIMESTAMP));
+                      AND (? >= NOW() OR ? IS NULL);
+             """.formatted(String.join(", ", Collections.nCopies(fieldMap.size(), "? = ?")));
 
-            return executeStatement(st, value, fieldMap);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                setStatementValues(statement, value, fieldMap.keySet().stream().toList(), fieldMap, new AtomicInteger(1));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.execute();
+
+                return true;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return false;
+            }
         });
     }
 
@@ -202,12 +455,37 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
             //language=MySQL
             String st = """
-                    UPDATE `%s`
-                    SET `%s` = ?
-                    WHERE `%s` = "%s";
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.KEY), key);
+                    UPDATE ?
+                    SET ? = ?
+                    WHERE ? = ?;
+             """;
 
-            return executeExpiryUpdate(st, expiry);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                if (expiry == null) {
+
+                    statement.setNull(c.getAndIncrement(), Types.TIMESTAMP);
+                } else {
+
+                    statement.setTimestamp(c.getAndIncrement(), Timestamp.from(expiry));
+                }
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+
+                statement.execute();
+                return true;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return false;
+            }
         });
     }
 
@@ -215,16 +493,42 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
         return CompletableFuture.supplyAsync(() -> {
 
-            String values = fieldMap.entrySet().stream().map(e -> "`%s` = ?".formatted(columnName(e.getValue().type().toString(), e.getKey()))).collect(Collectors.joining(" AND "));
             //language=MySQL
             String st = """
-                    UPDATE `%s`
-                    SET `%s` = ?
-                    WHERE `%s` = "%s"
+                    UPDATE ?
+                    SET ? = ?
+                    WHERE ? = ?
                       AND %s;
-             """.formatted(tableName(namespace), columnName(ColumnNames.TTL_TIMESTAMP), columnName(ColumnNames.KEY), key, values);
+             """.formatted( String.join(" AND ", Collections.nCopies(fieldMap.size(), "? = ?")));
 
-            return executeExpiryUpdate(st, expiry);
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                if (expiry == null) {
+
+                    statement.setNull(c.getAndIncrement(), Types.TIMESTAMP);
+                } else {
+
+                    statement.setTimestamp(c.getAndIncrement(), Timestamp.from(expiry));
+                }
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+
+                setSelectRow(statement, value, fieldMap.keySet().stream().toList(), fieldMap, c);
+
+                statement.execute();
+                return true;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return false;
+            }
         });
     }
 }
