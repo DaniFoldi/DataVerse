@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TranslationEngine {
 
-    private Map<String, String> javaTypeToMysqlColumn = new ConcurrentHashMap<>();
-    private Map<String, QuadConsumer<PreparedStatement, Integer, FieldSpec, Object>> javaTypeToMysqlQuery = new ConcurrentHashMap<>();
-    private Map<String, QuadConsumer<ResultSet, String, FieldSpec, Object>> mysqlResultToJavaType = new ConcurrentHashMap<>();
+    private final Map<String, String> javaTypeToMysqlColumn = new ConcurrentHashMap<>();
+    private final Map<String, QuadConsumer<PreparedStatement, Integer, FieldSpec, Object>> javaTypeToMysqlQuery = new ConcurrentHashMap<>();
+    private final Map<String, QuadConsumer<ResultSet, String, FieldSpec, Object>> mysqlResultToJavaType = new ConcurrentHashMap<>();
 
     public void addJavaTypeToMysqlColumn(String javaType, String mysqlColumn) {
 

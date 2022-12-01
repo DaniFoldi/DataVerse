@@ -2,7 +2,7 @@ package com.danifoldi.dataverse.database.mysql;
 
 import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.data.NamespacedMultiDataVerse;
-import com.danifoldi.dataverse.util.Pair;
+import com.danifoldi.microbase.util.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;

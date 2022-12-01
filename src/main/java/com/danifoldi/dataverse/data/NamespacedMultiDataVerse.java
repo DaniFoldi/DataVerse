@@ -1,6 +1,6 @@
 package com.danifoldi.dataverse.data;
 
-import com.danifoldi.dataverse.util.Pair;
+import com.danifoldi.microbase.util.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;

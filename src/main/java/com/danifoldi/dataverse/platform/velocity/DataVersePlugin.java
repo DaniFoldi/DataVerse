@@ -20,7 +20,7 @@ import java.nio.file.Path;
 public class DataVersePlugin {
 
     private @Nullable Runnable closeDatabaseEngineConnection;
-    private @NotNull Path datafolder;
+    private @NotNull final Path datafolder;
 
     @Inject
     public DataVersePlugin(final @DataDirectory @NotNull Path datafolder) {

@@ -2,7 +2,7 @@ package com.danifoldi.dataverse.database.mysql;
 
 import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
-import com.danifoldi.dataverse.util.Pair;
+import com.danifoldi.microbase.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
