@@ -76,6 +76,12 @@ public class DataVerse {
 
     private <T> @NotNull NamespacedDataVerse<@NotNull T> createNamespacedDataVerse(String namespace, Supplier<T> instanceSupplier) {
 
+        if (storageType == null || databaseEngine == null) {
+
+            logger.severe("Setup has not been called before requesting a dataverse");
+            throw new IllegalStateException("Setup has not been called before requesting a dataverse");
+        }
+
         return switch (storageType) {
 
             case MYSQL -> new MySQLDataVerse<>((MySQLDatabaseEngine)databaseEngine, namespace, instanceSupplier);
@@ -84,6 +90,12 @@ public class DataVerse {
     }
 
     private <T> @NotNull NamespacedMultiDataVerse<@NotNull T> createNamespacedMultiDataVerse(String namespace, Supplier<T> instanceSupplier) {
+
+        if (storageType == null || databaseEngine == null) {
+
+            logger.severe("Setup has not been called before requesting a dataverse");
+            throw new IllegalStateException("Setup has not been called before requesting a dataverse");
+        }
 
         return switch (storageType) {
 
