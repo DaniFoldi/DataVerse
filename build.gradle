@@ -26,8 +26,11 @@ dependencies {
     compileOnly 'com.velocitypowered:velocity-api:3.1.1'
     annotationProcessor 'com.velocitypowered:velocity-api:3.1.1'
 
-    // db connectors
+    // internal libraries
     implementation 'com.danifoldi:DML:1.0.2'
+    implementation 'com.danifoldi:microbase:0.6.0'
+
+    // db connectors
     implementation ('com.zaxxer:HikariCP:5.0.1') {
         exclude module: 'slf4j-api'
     }
@@ -36,7 +39,6 @@ dependencies {
     implementation 'mysql:mysql-connector-java:8.0.31'
 
     // inject system
-    implementation 'javax.inject:javax.inject:1'
     implementation 'com.google.dagger:dagger:2.44.2'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.44.2'
 
@@ -61,6 +63,7 @@ shadowJar {
 
     relocate 'com.zaxxer.hikari', 'com.danifoldi.dataverse.lib.hikari'
     relocate 'com.danifoldi.dml', 'com.danifoldi.dataverse.lib.dml'
+    relocate 'com.danifoldi.microbase', 'com.danifoldi.dataverse.lib.microbase'
     relocate 'org.mariadb', 'com.danifoldi.dataverse.lib.mariadb'
     relocate 'com.mongodb', 'com.danifoldi.dataverse.lib.mongodb'
     relocate 'com.google.protobuf', 'com.danifoldi.dataverse.lib.protobuf'
