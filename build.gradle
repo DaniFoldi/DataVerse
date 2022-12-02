@@ -6,10 +6,11 @@ plugins {
 }
 
 group 'com.danifoldi'
-version '0.4.2'
+version '0.5.0'
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
 
 repositories {
     mavenCentral()
@@ -34,7 +35,11 @@ dependencies {
     implementation ('com.zaxxer:HikariCP:5.0.1') {
         exclude module: 'slf4j-api'
     }
-    implementation 'org.mariadb.jdbc:mariadb-java-client:3.1.0'
+    implementation ('org.mariadb.jdbc:mariadb-java-client:3.1.0') {
+        exclude module: 'checker-qual'
+        exclude module: 'jcl-over-slf4j'
+        exclude module: 'slf4j-api'
+    }
     implementation 'org.mongodb:mongo-java-driver:3.12.11'
     implementation 'mysql:mysql-connector-java:8.0.31'
 
@@ -59,7 +64,7 @@ blossom {
 }
 
 shadowJar {
-    //minimize()
+    minimize()
 
     relocate 'com.zaxxer.hikari', 'com.danifoldi.dataverse.lib.hikari'
     relocate 'com.danifoldi.dml', 'com.danifoldi.dataverse.lib.dml'
