@@ -1,6 +1,6 @@
 package com.danifoldi.dataverse.data;
 
-import com.google.gson.reflect.TypeToken;
+import com.google.common.reflect.TypeToken;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
@@ -32,7 +32,8 @@ public abstract class FieldMappable<T> {
 
             field.setAccessible(true);
             final @NotNull Type type = field.getType();
-            final @NotNull TypeToken<?> typeToken = TypeToken.get(type);
+            @SuppressWarnings("UnstableApiUsage")
+            final @NotNull TypeToken<?> typeToken = TypeToken.of(type);
             final @NotNull String name = field.getName();
 
             fieldMap.put(name, new FieldSpec(name, typeToken, field));

@@ -1,6 +1,7 @@
 package com.danifoldi.dataverse.platform.bukkit;
 
 import com.danifoldi.dataverse.DataVerse;
+import com.danifoldi.dataverse.DataverseProvider;
 import com.danifoldi.dataverse.translation.TranslationEngine;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -18,8 +19,8 @@ public class DataVersePlugin extends JavaPlugin {
     @Override
     public void onEnable() {
 
-        DataVerse
-                .setup(getDataFolder().toPath().resolve("config.dml"))
+        DataverseProvider
+                .run(getDataFolder().toPath().resolve("config.dml"))
                 .thenAccept(action -> {
 
                     closeDatabaseEngineConnection = action;

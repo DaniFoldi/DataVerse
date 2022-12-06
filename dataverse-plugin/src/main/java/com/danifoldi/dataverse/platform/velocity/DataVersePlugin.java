@@ -1,6 +1,7 @@
 package com.danifoldi.dataverse.platform.velocity;
 
 import com.danifoldi.dataverse.DataVerse;
+import com.danifoldi.dataverse.DataverseProvider;
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -31,8 +32,8 @@ public class DataVersePlugin {
     @Subscribe
     public void onInitialize(ProxyInitializeEvent event) {
 
-        DataVerse
-                .setup(datafolder.resolve("config.dml"))
+        DataverseProvider
+                .run(datafolder.resolve("config.dml"))
                 .thenAccept(action -> closeDatabaseEngineConnection = action);
     }
 

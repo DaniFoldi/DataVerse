@@ -1,24 +1,20 @@
 package com.danifoldi.dataverse;
 
-import com.danifoldi.dataverse.config.Config;
 import com.danifoldi.dataverse.data.Namespaced;
 import com.danifoldi.dataverse.data.NamespacedDataVerse;
 import com.danifoldi.dataverse.data.NamespacedMultiDataVerse;
 import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.danifoldi.dataverse.database.StorageType;
-import com.danifoldi.dataverse.database.mysql.MySQLDataVerse;
-import com.danifoldi.dataverse.database.mysql.MySQLDatabaseEngine;
-import com.danifoldi.dataverse.database.mysql.MySQLMultiDataVerse;
 import com.danifoldi.dataverse.translation.TranslationEngine;
+import com.danifoldi.dataverse.util.QuadFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -26,28 +22,17 @@ public class DataVerse {
 
     private final @NotNull Map<@NotNull String, @NotNull NamespacedDataVerse<?>> cache = new ConcurrentHashMap<>();
     private final @NotNull Map<@NotNull String, @NotNull NamespacedMultiDataVerse<?>> multiCache = new ConcurrentHashMap<>();
+    private QuadFunction<StorageType, DatabaseEngine, String, Supplier<?>, NamespacedDataVerse<?>> dataverseProvider;
+    private QuadFunction<StorageType, DatabaseEngine, String, Supplier<?>, NamespacedMultiDataVerse<?>> multiDataverseProvider;
     private @Nullable DatabaseEngine databaseEngine = null;
     private final @NotNull TranslationEngine translationEngine = new TranslationEngine();
-    private @Nullable StorageType storageType;
-    private final @NotNull Logger logger = Logger.getLogger("DataVerse DatabaseEngine");
+    public @Nullable StorageType storageType;
+    private final @NotNull Logger logger = Logger.getLogger("DataVerse");
 
-    private DataVerse() {
+    private static DataVerse instance;
 
-    }
+    public DataVerse() {
 
-    private void setup(Map<String, String> config) {
-
-        this.storageType = StorageType.valueOf(config.get("storage_type").toUpperCase(Locale.ROOT));
-
-        switch (storageType) {
-
-            case MYSQL -> {
-
-                databaseEngine = new MySQLDatabaseEngine();
-                databaseEngine.setLogger(logger);
-                databaseEngine.connect(config, translationEngine);
-            }
-        }
     }
 
     @SuppressWarnings("unchecked, unused")
@@ -82,11 +67,8 @@ public class DataVerse {
             throw new IllegalStateException("Setup has not been called before requesting a dataverse");
         }
 
-        return switch (storageType) {
-
-            case MYSQL -> new MySQLDataVerse<>((MySQLDatabaseEngine)databaseEngine, namespace, instanceSupplier);
-            default -> null;
-        };
+        //noinspection unchecked
+        return (NamespacedDataVerse<T>)dataverseProvider.apply(storageType, databaseEngine, namespace, instanceSupplier);
     }
 
     private <T> @NotNull NamespacedMultiDataVerse<@NotNull T> createNamespacedMultiDataVerse(String namespace, Supplier<T> instanceSupplier) {
@@ -97,24 +79,20 @@ public class DataVerse {
             throw new IllegalStateException("Setup has not been called before requesting a dataverse");
         }
 
-        return switch (storageType) {
-
-            case MYSQL -> new MySQLMultiDataVerse<>((MySQLDatabaseEngine)databaseEngine, namespace, instanceSupplier);
-            default -> null;
-        };
+        //noinspection unchecked
+        return (NamespacedMultiDataVerse<T>)multiDataverseProvider.apply(storageType, databaseEngine, namespace, instanceSupplier);
     }
 
     private void clearCache() {
 
         cache.clear();
+        multiCache.clear();
     }
 
     public @NotNull TranslationEngine getTranslationEngine() {
 
         return translationEngine;
     }
-
-    private static @Nullable DataVerse instance;
 
     public static @NotNull DataVerse getDataVerse() {
 
@@ -125,7 +103,10 @@ public class DataVerse {
         return instance;
     }
 
-    public static @NotNull CompletableFuture<@NotNull Runnable> setup(final @NotNull Path configFile) {
+    public static @NotNull CompletableFuture<@NotNull Runnable> setup(Map<String, String> config,
+                                                                      Function<StorageType, DatabaseEngine> databaseEngineProvider,
+                                                                      QuadFunction<StorageType, DatabaseEngine, String, Supplier<?>, NamespacedDataVerse<?>> dataverseProvider,
+                                                                      QuadFunction<StorageType, DatabaseEngine, String, Supplier<?>, NamespacedMultiDataVerse<?>> multiDataverseProvider) {
 
         if (instance != null) {
 
@@ -133,21 +114,17 @@ public class DataVerse {
             return CompletableFuture.failedFuture(new IllegalStateException("DataVerse instance has already been set."));
         }
 
-        try {
-
-            Config.ensureConfig(configFile);
-        } catch (IOException e) {
-
-            // todo throw
-            e.printStackTrace();
-        }
-
-        Map<String, String> config = Config.getConfig(configFile);
-
         return CompletableFuture.supplyAsync(() -> {
 
             instance = new DataVerse();
-            instance.setup(config);
+
+            instance.storageType = StorageType.valueOf(config.get("storage_type").toUpperCase(Locale.ROOT));
+            instance.databaseEngine = databaseEngineProvider.apply(instance.storageType);
+            instance.dataverseProvider = dataverseProvider;
+            instance.multiDataverseProvider = multiDataverseProvider;
+            instance.databaseEngine.setLogger(instance.logger);
+            instance.databaseEngine.connect(config, instance.translationEngine);
+
             instance.translationEngine.clear();
             instance.translationEngine.setupStandard();
             return () -> {

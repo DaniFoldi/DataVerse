@@ -1,6 +1,7 @@
 package com.danifoldi.dataverse.platform.bungee;
 
 import com.danifoldi.dataverse.DataVerse;
+import com.danifoldi.dataverse.DataverseProvider;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,8 +13,8 @@ public class DataVersePlugin extends Plugin {
     @Override
     public void onEnable() {
 
-        DataVerse
-                .setup(getDataFolder().toPath().resolve("config.dml"))
+        DataverseProvider
+                .run(getDataFolder().toPath().resolve("config.dml"))
                 .thenAccept(action -> closeDatabaseEngineConnection = action);
     }
 
