@@ -82,65 +82,29 @@ public abstract class NamespacedDataVerse<T> extends FieldMappable<T> {
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
+    public abstract @NotNull CompletableFuture<@NotNull Long> count();
+
     public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMin(FieldSpec filterKey, BigDecimal cutoff);
-
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
     public abstract @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, BigDecimal cutoff);
 
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
-
     public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMax(FieldSpec filterKey, BigDecimal cutoff);
-
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
     public abstract @NotNull CompletableFuture<@NotNull Long> countFilterBool(FieldSpec filterKey, boolean value);
 
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
-
     public abstract @NotNull CompletableFuture<@NotNull Long> countFilterPrefix(FieldSpec filterKey, String prefix);
 
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sum(FieldSpec sumKey);
 
-    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff);
 
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec filterKey, BigDecimal cutoff);
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff);
 
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff);
 
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec sumKey, FieldSpec filterKey, boolean value);
 
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec filterKey, BigDecimal cutoff);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec filterKey, BigDecimal cutoff);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec filterKey, boolean value);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec filterKey, String prefix);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength);
-
-    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec sumKey, FieldSpec filterKey, String prefix);
 
     public @NotNull CompletableFuture<@NotNull Boolean> createOrUpdate(String key, T value) {
 

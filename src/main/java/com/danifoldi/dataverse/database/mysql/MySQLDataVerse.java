@@ -170,39 +170,20 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
+    public @NotNull CompletableFuture<@NotNull Long> count() {
+        return databaseEngine.count(namespace);
+    }
+
+    @Override
     public @NotNull CompletableFuture<@NotNull Long> countFilterMin(FieldSpec filterKey, BigDecimal cutoff) {
 
         return databaseEngine.countFilterMin(namespace, filterKey, cutoff);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
-
-        return databaseEngine.countFilterMin(namespace,  filterKey, cutoff, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.countFilterMin(namespace, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
-    }
-
-    @Override
     public @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, BigDecimal cutoff) {
 
-        return databaseEngine.countFilterEquals(namespace,  filterKey, cutoff);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
-
-        return databaseEngine.countFilterEquals(namespace, filterKey, cutoff, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.countFilterEquals(namespace, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
+        return databaseEngine.countFilterEquals(namespace, filterKey, cutoff);
     }
 
     @Override
@@ -212,33 +193,9 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
-
-        return databaseEngine.countFilterMax(namespace, filterKey, cutoff, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.countFilterMax(namespace, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
-    }
-
-    @Override
     public @NotNull CompletableFuture<@NotNull Long> countFilterBool(FieldSpec filterKey, boolean value) {
 
         return databaseEngine.countFilterBool(namespace, filterKey, value);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
-
-        return databaseEngine.countFilterBool(namespace, filterKey, value, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.countFilterBool(namespace, filterKey, value, pageCount, pageLength, sortKey, reverse);
     }
 
     @Override
@@ -248,105 +205,33 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
-
-        return databaseEngine.countFilterPrefix(namespace, filterKey, prefix, pageCount, pageLength);
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sum(FieldSpec sumKey) {
+        return databaseEngine.sum(namespace, sumKey);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull Long> countFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.countFilterPrefix(namespace, filterKey, prefix, pageCount, pageLength, sortKey, reverse);
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
+        return databaseEngine.sumFilterMin(namespace, sumKey, filterKey, cutoff);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec filterKey, BigDecimal cutoff) {
-
-        return databaseEngine.sumFilterMin(namespace, filterKey, cutoff);
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
+        return databaseEngine.sumFilterEquals(namespace, sumKey, filterKey, cutoff);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
-
-        return databaseEngine.sumFilterMin(namespace, filterKey, cutoff, pageCount, pageLength);
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
+        return databaseEngine.sumFilterMax(namespace, sumKey, filterKey, cutoff);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.sumFilterMin(namespace, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec sumKey, FieldSpec filterKey, boolean value) {
+        return databaseEngine.sumFilterBool(namespace, sumKey, filterKey, value);
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec filterKey, BigDecimal cutoff) {
-
-        return databaseEngine.sumFilterEquals(namespace, filterKey, cutoff);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
-
-        return databaseEngine.sumFilterEquals(namespace, filterKey, cutoff, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.sumFilterEquals(namespace, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec filterKey, BigDecimal cutoff) {
-
-        return databaseEngine.sumFilterMax(namespace, filterKey, cutoff);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
-
-        return databaseEngine.sumFilterMax(namespace, filterKey, cutoff, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.sumFilterMax(namespace, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec filterKey, boolean value) {
-
-        return databaseEngine.sumFilterBool(namespace, filterKey, value);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
-
-        return databaseEngine.sumFilterBool(namespace, filterKey, value, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.sumFilterBool(namespace, filterKey, value, pageCount, pageLength, sortKey, reverse);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec filterKey, String prefix) {
-
-        return databaseEngine.sumFilterPrefix(namespace, filterKey, prefix);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
-
-        return databaseEngine.sumFilterPrefix(namespace, filterKey, prefix, pageCount, pageLength);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
-
-        return databaseEngine.sumFilterPrefix(namespace, filterKey, prefix, pageCount, pageLength, sortKey, reverse);
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterPrefix(FieldSpec sumKey, FieldSpec filterKey, String prefix) {
+        return databaseEngine.sumFilterPrefix(namespace, sumKey, filterKey, prefix);
     }
 
     @Override
