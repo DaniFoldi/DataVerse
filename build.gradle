@@ -18,10 +18,9 @@ repositories {
 
 dependencies {
     // internal libraries
-    implementation 'com.danifoldi:DML:1.0.2'
     implementation 'com.danifoldi:microbase:0.6.0'
 
-// typetoken
+    // typetoken
     implementation ('com.google.guava:guava:31.0.1-jre') {
         exclude module: 'gson'
         exclude module: 'error_prone_annotations'

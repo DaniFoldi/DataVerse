@@ -40,6 +40,7 @@ public abstract class FieldMappable<T> {
         }
     }
 
+    @SuppressWarnings("unused")
     public FieldSpec getField(final @NotNull String name) {
 
         return fieldMap.get(name);

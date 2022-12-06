@@ -69,6 +69,8 @@ shadowJar {
     relocate 'com.danifoldi.microbase', 'com.danifoldi.dataverse.lib.microbase'
     relocate 'org.mariadb', 'com.danifoldi.dataverse.lib.mariadb'
     relocate 'com.mongodb', 'com.danifoldi.dataverse.lib.mongodb'
+    relocate 'com.google.common', 'com.danifoldi.dataverse.lib.common'
+    relocate 'com.google.errorprone', 'com.danifoldi.dataverse.lib.errorprone'
     relocate 'com.google.protobuf', 'com.danifoldi.dataverse.lib.protobuf'
     relocate 'google.protobuf', 'com.danifoldi.dataverse.lib.protobuf2'
     relocate 'com.mysql', 'com.danifoldi.dataverse.lib.mysql'

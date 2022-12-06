@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+@SuppressWarnings("unused")
 public abstract class NamespacedDataVerse<T> extends FieldMappable<T> {
 
     public NamespacedDataVerse(@NotNull String namespace, @NotNull Supplier<@NotNull T> instanceSupplier) {

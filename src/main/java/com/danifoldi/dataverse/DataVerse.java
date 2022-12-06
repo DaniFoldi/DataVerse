@@ -83,6 +83,7 @@ public class DataVerse {
         return (NamespacedMultiDataVerse<T>)multiDataverseProvider.apply(storageType, databaseEngine, namespace, instanceSupplier);
     }
 
+    @SuppressWarnings("unused")
     private void clearCache() {
 
         cache.clear();
