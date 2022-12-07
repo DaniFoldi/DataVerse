@@ -393,6 +393,52 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    <T> CompletableFuture<List<Pair<String, T>>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? >= ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
     <T> CompletableFuture<List<Pair<String, T>>> filterMin(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -430,6 +476,56 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
                     values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? >= ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
                 }
                 return values;
             } catch (SQLException e) {
@@ -492,6 +588,61 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    <T> CompletableFuture<List<Pair<String, T>>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? >= ?
+                    ORDER BY ?
+                    ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sortKey.type().toString(), sortKey.name()));
+                statement.setString(c.getAndIncrement(), reverse ? "DESC" : "ASC");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
     <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -525,6 +676,52 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
                     values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
                 }
                 return values;
             } catch (SQLException e) {
@@ -572,6 +769,56 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
                     values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
                 }
                 return values;
             } catch (SQLException e) {
@@ -634,6 +881,61 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                    ORDER BY ?
+                    ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sortKey.type().toString(), sortKey.name()));
+                statement.setString(c.getAndIncrement(), reverse ? "DESC" : "ASC");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
     <T> CompletableFuture<List<Pair<String, T>>> filterMax(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -667,6 +969,52 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
                     values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? <= ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
                 }
                 return values;
             } catch (SQLException e) {
@@ -714,6 +1062,56 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
                     values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? <= ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
                 }
                 return values;
             } catch (SQLException e) {
@@ -776,6 +1174,61 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    <T> CompletableFuture<List<Pair<String, T>>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? <= ?
+                    ORDER BY ?
+                    ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sortKey.type().toString(), sortKey.name()));
+                statement.setString(c.getAndIncrement(), reverse ? "DESC" : "ASC");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
     <T> CompletableFuture<List<Pair<String, T>>> filterBool(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -809,6 +1262,52 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, instance, fieldMap);
                     values.add(Pair.of(key, instance));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBoolean(c.getAndIncrement(), value);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T instance = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, instance, fieldMap);
+                    values.add(Pair.of(k, instance));
                 }
                 return values;
             } catch (SQLException e) {
@@ -856,6 +1355,56 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, instance, fieldMap);
                     values.add(Pair.of(key, instance));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBoolean(c.getAndIncrement(), value);
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T instance = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, instance, fieldMap);
+                    values.add(Pair.of(k, instance));
                 }
                 return values;
             } catch (SQLException e) {
@@ -918,6 +1467,61 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    <T> CompletableFuture<List<Pair<String, T>>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                    ORDER BY ?
+                    ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBoolean(c.getAndIncrement(), value);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sortKey.type().toString(), sortKey.name()));
+                statement.setString(c.getAndIncrement(), reverse ? "DESC" : "ASC");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T instance = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, instance, fieldMap);
+                    values.add(Pair.of(k, instance));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
     <T> CompletableFuture<List<Pair<String, T>>> filterPrefix(String namespace, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -951,6 +1555,52 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
                     values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? LIKE ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setString(c.getAndIncrement(), prefix + "%");
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
                 }
                 return values;
             } catch (SQLException e) {
@@ -998,6 +1648,56 @@ public class MySQLDatabaseEngine extends SQLOperations {
                     String key = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
                     values.add(Pair.of(key, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
+    <T> CompletableFuture<List<Pair<String, T>>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? LIKE ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setString(c.getAndIncrement(), prefix + "%");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
                 }
                 return values;
             } catch (SQLException e) {
@@ -1060,6 +1760,61 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    <T> CompletableFuture<List<Pair<String, T>>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? LIKE ?
+                    ORDER BY ?
+                    ?
+                    LIMIT ?
+                    OFFSET ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setString(c.getAndIncrement(), prefix + "%");
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sortKey.type().toString(), sortKey.name()));
+                statement.setString(c.getAndIncrement(), reverse ? "DESC" : "ASC");
+                statement.setInt(c.getAndIncrement(), pageLength);
+                statement.setInt(c.getAndIncrement(), (pageCount - 1) * pageLength);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                List<Pair<String, T>> values = new ArrayList<>();
+                while (results.next()) {
+
+                    T value = instanceSupplier.get();
+                    String k = results.getString(columnName("key"));
+                    setResultValues(results, value, fieldMap);
+                    values.add(Pair.of(k, value));
+                }
+                return values;
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return Collections.emptyList();
+            }
+        });
+    }
+
     CompletableFuture<Long> count(String namespace) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -1096,6 +1851,45 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    CompletableFuture<Long> count(String namespace, String key) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT *
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                    );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
     CompletableFuture<Long> countFilterMin(String namespace, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -1115,10 +1909,54 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 AtomicInteger c = new AtomicInteger(1);
 
-                statement.setString(c.getAndIncrement(), tableName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countFilterMin(String namespace, String key, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? >= ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBigDecimal(c.getAndIncrement(), cutoff);
@@ -1156,10 +1994,54 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 AtomicInteger c = new AtomicInteger(1);
 
-                statement.setString(c.getAndIncrement(), tableName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countFilterEquals(String namespace, String key, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBigDecimal(c.getAndIncrement(), cutoff);
@@ -1197,10 +2079,54 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 AtomicInteger c = new AtomicInteger(1);
 
-                statement.setString(c.getAndIncrement(), tableName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countFilterMax(String namespace, String key, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? <= ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBigDecimal(c.getAndIncrement(), cutoff);
@@ -1238,10 +2164,54 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 AtomicInteger c = new AtomicInteger(1);
 
-                statement.setString(c.getAndIncrement(), tableName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBoolean(c.getAndIncrement(), value);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countFilterBool(String namespace, String key, FieldSpec filterKey, boolean value) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBoolean(c.getAndIncrement(), value);
@@ -1279,10 +2249,54 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 AtomicInteger c = new AtomicInteger(1);
 
-                statement.setString(c.getAndIncrement(), tableName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setString(c.getAndIncrement(), prefix + "%");
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countFilterPrefix(String namespace, String key, FieldSpec filterKey, String prefix) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? LIKE ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setString(c.getAndIncrement(), prefix + "%");
@@ -1319,7 +2333,45 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 AtomicInteger c = new AtomicInteger(1);
 
-                statement.setString(c.getAndIncrement(), tableName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countDistinct(String namespace, String key) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT DISTINCT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                    );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
@@ -1379,6 +2431,50 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    CompletableFuture<Long> countDistinctFilterMin(String namespace, String key, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT DISTINCT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? >= ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
     CompletableFuture<Long> countDistinctFilterEquals(String namespace, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -1402,6 +2498,50 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countDistinctFilterEquals(String namespace, String key, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT DISTINCT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBigDecimal(c.getAndIncrement(), cutoff);
@@ -1461,6 +2601,50 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    CompletableFuture<Long> countDistinctFilterMax(String namespace, String key, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT DISTINCT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? <= ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
     CompletableFuture<Long> countDistinctFilterBool(String namespace, FieldSpec filterKey, boolean value) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -1484,6 +2668,50 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBoolean(c.getAndIncrement(), value);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
+    CompletableFuture<Long> countDistinctFilterBool(String namespace, String key, FieldSpec filterKey, boolean value) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT DISTINCT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBoolean(c.getAndIncrement(), value);
@@ -1543,6 +2771,50 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    CompletableFuture<Long> countDistinctFilterPrefix(String namespace, String key, FieldSpec filterKey, String prefix) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT COUNT(*) as `count` FROM (
+                    SELECT DISTINCT ?
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? LIKE ?
+                      );
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setString(c.getAndIncrement(), prefix + "%");
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return 0L;
+                }
+                return results.getLong("count");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return 0L;
+            }
+        });
+    }
+
     CompletableFuture<BigDecimal> sum(String namespace, FieldSpec sumKey) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -1564,6 +2836,45 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return BigDecimal.ZERO;
+                }
+                return results.getBigDecimal("sum");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return BigDecimal.ZERO;
+            }
+        });
+    }
+
+    CompletableFuture<BigDecimal> sum(String namespace, String key, FieldSpec sumKey) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT SUM(?) as `sum`
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sumKey.type().toString(), sumKey.name()));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
@@ -1601,6 +2912,49 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return BigDecimal.ZERO;
+                }
+                return results.getBigDecimal("sum");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return BigDecimal.ZERO;
+            }
+        });
+    }
+
+    CompletableFuture<BigDecimal> sumFilterMin(String namespace, String key, FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT SUM(?) as `sum`
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? >= ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sumKey.type().toString(), sumKey.name()));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBigDecimal(c.getAndIncrement(), cutoff);
@@ -1659,6 +3013,49 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    CompletableFuture<BigDecimal> sumFilterEquals(String namespace, String key, FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT SUM(?) as `sum`
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sumKey.type().toString(), sumKey.name()));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return BigDecimal.ZERO;
+                }
+                return results.getBigDecimal("sum");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return BigDecimal.ZERO;
+            }
+        });
+    }
+
     CompletableFuture<BigDecimal> sumFilterMax(String namespace, FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -1681,6 +3078,49 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBigDecimal(c.getAndIncrement(), cutoff);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return BigDecimal.ZERO;
+                }
+                return results.getBigDecimal("sum");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return BigDecimal.ZERO;
+            }
+        });
+    }
+
+    CompletableFuture<BigDecimal> sumFilterMax(String namespace, String key, FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT SUM(?) as `sum`
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? <= ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sumKey.type().toString(), sumKey.name()));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setBigDecimal(c.getAndIncrement(), cutoff);
@@ -1739,6 +3179,49 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
+    CompletableFuture<BigDecimal> sumFilterBool(String namespace, String key, FieldSpec sumKey, FieldSpec filterKey, boolean value) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT SUM(?) as `sum`
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? = ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sumKey.type().toString(), sumKey.name()));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setBoolean(c.getAndIncrement(), value);
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return BigDecimal.ZERO;
+                }
+                return results.getBigDecimal("sum");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return BigDecimal.ZERO;
+            }
+        });
+    }
+
     CompletableFuture<BigDecimal> sumFilterPrefix(String namespace, FieldSpec sumKey, FieldSpec filterKey, String prefix) {
 
         return CompletableFuture.supplyAsync(() -> {
@@ -1761,6 +3244,49 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 statement.setString(c.getAndIncrement(), tableName(namespace));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
                 statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
+                statement.setString(c.getAndIncrement(), prefix + "%");
+
+                final @NotNull ResultSet results = statement.executeQuery();
+
+                if (!results.next()) {
+                    return BigDecimal.ZERO;
+                }
+                return results.getBigDecimal("sum");
+            } catch (SQLException e) {
+
+                logger.severe(e.getMessage());
+                return BigDecimal.ZERO;
+            }
+        });
+    }
+
+    CompletableFuture<BigDecimal> sumFilterPrefix(String namespace, String key, FieldSpec sumKey, FieldSpec filterKey, String prefix) {
+
+        return CompletableFuture.supplyAsync(() -> {
+
+            //language=MySQL
+            String st = """
+                    SELECT SUM(?) as `sum`
+                    FROM ?
+                    WHERE (? >= NOW() OR ? IS NULL)
+                      AND ? = ?
+                      AND ? LIKE ?;
+             """;
+
+            try (final @NotNull Connection connection = connectionPool.getConnection();
+                 final @NotNull PreparedStatement statement = connection.prepareStatement(st)) {
+
+                AtomicInteger c = new AtomicInteger(1);
+
+                //noinspection UnstableApiUsage
+                statement.setString(c.getAndIncrement(), columnName(sumKey.type().toString(), sumKey.name()));
+                statement.setString(c.getAndIncrement(), tableName(namespace));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.TTL_TIMESTAMP));
+                statement.setString(c.getAndIncrement(), columnName(ColumnNames.KEY));
+                statement.setString(c.getAndIncrement(), key);
                 //noinspection UnstableApiUsage
                 statement.setString(c.getAndIncrement(), columnName(filterKey.type().toString(), filterKey.name()));
                 statement.setString(c.getAndIncrement(), prefix + "%");
