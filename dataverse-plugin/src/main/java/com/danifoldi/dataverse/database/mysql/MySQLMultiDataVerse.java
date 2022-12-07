@@ -97,7 +97,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff) {
 
         return databaseEngine.filterMin(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff);
     }
@@ -109,7 +109,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
 
         return databaseEngine.filterMin(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff, pageCount, pageLength);
     }
@@ -121,7 +121,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return databaseEngine.filterMin(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
     }
@@ -133,7 +133,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff) {
 
         return databaseEngine.filterEquals(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff);
     }
@@ -145,7 +145,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
 
         return databaseEngine.filterEquals(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff, pageCount, pageLength);
     }
@@ -157,7 +157,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return databaseEngine.filterEquals(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
     }
@@ -169,7 +169,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, String value) {
 
         return databaseEngine.filterEquals(namespace, key, instanceSupplier, fieldMap, filterKey, value);
     }
@@ -181,7 +181,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength) {
 
         return databaseEngine.filterEquals(namespace, key, instanceSupplier, fieldMap, filterKey, value, pageCount, pageLength);
     }
@@ -193,7 +193,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return databaseEngine.filterEquals(namespace, key, instanceSupplier, fieldMap, filterKey, value, pageCount, pageLength, sortKey, reverse);
     }
@@ -205,7 +205,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff) {
 
         return databaseEngine.filterMax(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff);
     }
@@ -217,7 +217,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
 
         return databaseEngine.filterMax(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff, pageCount, pageLength);
     }
@@ -229,7 +229,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return  databaseEngine.filterMax(namespace, key, instanceSupplier, fieldMap, filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
     }
@@ -241,7 +241,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(String key, FieldSpec filterKey, boolean value) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(String key, FieldSpec filterKey, boolean value) {
 
         return databaseEngine.filterBool(namespace, key, instanceSupplier, fieldMap, filterKey, value);
     }
@@ -253,7 +253,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
         return databaseEngine.filterBool(namespace, key, instanceSupplier, fieldMap, filterKey, value, pageCount, pageLength);
     }
 
@@ -264,7 +264,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return databaseEngine.filterBool(namespace, key, instanceSupplier, fieldMap, filterKey, value, pageCount, pageLength, sortKey, reverse);
     }
@@ -276,7 +276,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(String key, FieldSpec filterKey, String prefix) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(String key, FieldSpec filterKey, String prefix) {
 
         return databaseEngine.filterPrefix(namespace, key, instanceSupplier, fieldMap, filterKey, prefix);
     }
@@ -288,7 +288,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
 
         return databaseEngine.filterPrefix(namespace, key, instanceSupplier, fieldMap, filterKey, prefix, pageCount, pageLength);
     }
@@ -300,7 +300,7 @@ public class MySQLMultiDataVerse<T> extends NamespacedMultiDataVerse<T> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return databaseEngine.filterPrefix(namespace, key, instanceSupplier, fieldMap, filterKey, prefix, pageCount, pageLength, sortKey, reverse);
     }

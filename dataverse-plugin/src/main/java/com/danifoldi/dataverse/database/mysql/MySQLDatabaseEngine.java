@@ -393,7 +393,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
+    <T> CompletableFuture<List<T>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -422,13 +422,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -486,7 +485,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    <T> CompletableFuture<List<T>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -519,13 +518,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -588,7 +586,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    <T> CompletableFuture<List<T>> filterMin(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -626,13 +624,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -686,7 +683,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
+    <T> CompletableFuture<List<T>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -715,13 +712,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -779,7 +775,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    <T> CompletableFuture<List<T>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -812,13 +808,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -881,7 +876,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    <T> CompletableFuture<List<T>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -919,13 +914,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -979,7 +973,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String value) {
+    <T> CompletableFuture<List<T>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String value) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1008,13 +1002,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T v = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
-                    setResultValues(results, v, fieldMap);
-                    values.add(Pair.of(k, v));
+                    T value = instanceSupplier.get();
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1072,7 +1065,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String value, int pageCount, int pageLength) {
+    <T> CompletableFuture<List<T>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String value, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1105,13 +1098,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T v = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
-                    setResultValues(results, v, fieldMap);
-                    values.add(Pair.of(k, v));
+                    T value = instanceSupplier.get();
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1174,7 +1166,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    <T> CompletableFuture<List<T>> filterEquals(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1212,13 +1204,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T v = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
-                    setResultValues(results, v, fieldMap);
-                    values.add(Pair.of(k, v));
+                    T value = instanceSupplier.get();
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1272,7 +1263,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
+    <T> CompletableFuture<List<T>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1301,13 +1292,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1365,7 +1355,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    <T> CompletableFuture<List<T>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1398,13 +1388,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1467,7 +1456,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    <T> CompletableFuture<List<T>> filterMax(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1505,13 +1494,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1565,7 +1553,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value) {
+    <T> CompletableFuture<List<T>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1594,13 +1582,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T instance = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
-                    setResultValues(results, instance, fieldMap);
-                    values.add(Pair.of(k, instance));
+                    T value = instanceSupplier.get();
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1658,7 +1645,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
+    <T> CompletableFuture<List<T>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1691,13 +1678,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T instance = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
-                    setResultValues(results, instance, fieldMap);
-                    values.add(Pair.of(k, instance));
+                    T value = instanceSupplier.get();
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1760,7 +1746,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    <T> CompletableFuture<List<T>> filterBool(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1798,13 +1784,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T instance = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
-                    setResultValues(results, instance, fieldMap);
-                    values.add(Pair.of(k, instance));
+                    T value = instanceSupplier.get();
+                    setResultValues(results, value, fieldMap);
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1858,7 +1843,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix) {
+    <T> CompletableFuture<List<T>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1887,13 +1872,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1951,7 +1935,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
+    <T> CompletableFuture<List<T>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -1984,13 +1968,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {
@@ -2053,7 +2036,7 @@ public class MySQLDatabaseEngine extends SQLOperations {
         });
     }
 
-    <T> CompletableFuture<List<Pair<String, T>>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    <T> CompletableFuture<List<T>> filterPrefix(String namespace, String key, Supplier<T> instanceSupplier, Map<String, FieldSpec> fieldMap, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -2091,13 +2074,12 @@ public class MySQLDatabaseEngine extends SQLOperations {
 
                 final @NotNull ResultSet results = statement.executeQuery();
 
-                List<Pair<String, T>> values = new ArrayList<>();
+                List<T> values = new ArrayList<>();
                 while (results.next()) {
 
                     T value = instanceSupplier.get();
-                    String k = results.getString(columnName("key"));
                     setResultValues(results, value, fieldMap);
-                    values.add(Pair.of(k, value));
+                    values.add(value);
                 }
                 return values;
             } catch (SQLException e) {

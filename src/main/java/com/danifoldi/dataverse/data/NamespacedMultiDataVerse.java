@@ -51,145 +51,145 @@ public abstract class NamespacedMultiDataVerse<T> extends FieldMappable<T> {
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(FieldSpec filterKey, BigDecimal cutoff);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(UUID key, FieldSpec filterKey, BigDecimal cutoff) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(UUID key, FieldSpec filterKey, BigDecimal cutoff) {
         return filterMin(key.toString(), filterKey, cutoff);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
         return filterMin(key.toString(), filterKey, cutoff, pageCount, pageLength);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMin(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMin(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
         return filterMin(key.toString(), filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, BigDecimal cutoff);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff) {
         return filterEquals(key.toString(), filterKey, cutoff);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
         return filterEquals(key.toString(), filterKey, cutoff, pageCount, pageLength);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
         return filterEquals(key.toString(), filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, String value);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, String value) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(UUID key, FieldSpec filterKey, String value) {
         return filterEquals(key.toString(), filterKey, value);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value, int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, String value, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(UUID key, FieldSpec filterKey, String value, int pageCount, int pageLength) {
         return filterEquals(key.toString(), filterKey, value, pageCount, pageLength);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterEquals(UUID key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
         return filterEquals(key.toString(), filterKey, value, pageCount, pageLength, sortKey, reverse);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(FieldSpec filterKey, BigDecimal cutoff);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(UUID key, FieldSpec filterKey, BigDecimal cutoff) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(UUID key, FieldSpec filterKey, BigDecimal cutoff) {
         return filterMax(key.toString(), filterKey, cutoff);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
         return filterMax(key.toString(), filterKey, cutoff,pageCount, pageLength);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterMax(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
         return filterMax(key.toString(), filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(FieldSpec filterKey, boolean value);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(String key, FieldSpec filterKey, boolean value);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(String key, FieldSpec filterKey, boolean value);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(UUID key, FieldSpec filterKey, boolean value) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(UUID key, FieldSpec filterKey, boolean value) {
         return filterBool(key.toString(), filterKey, value);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(UUID key, FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(UUID key, FieldSpec filterKey, boolean value, int pageCount, int pageLength) {
         return filterBool(key.toString(), filterKey, value, pageCount, pageLength);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(String key, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterBool(UUID key, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterBool(UUID key, FieldSpec filterKey, boolean value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
         return filterBool(key.toString(), filterKey, value, pageCount, pageLength, sortKey, reverse);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(FieldSpec filterKey, String prefix);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(String key, FieldSpec filterKey, String prefix);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(String key, FieldSpec filterKey, String prefix);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(UUID key, FieldSpec filterKey, String prefix) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(UUID key, FieldSpec filterKey, String prefix) {
         return filterPrefix(key.toString(), filterKey, prefix);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(UUID key, FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(UUID key, FieldSpec filterKey, String prefix, int pageCount, int pageLength) {
         return filterPrefix(key.toString(), filterKey, prefix, pageCount, pageLength);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(String key, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
 
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterPrefix(UUID key, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+    public @NotNull CompletableFuture<@NotNull List<@NotNull T>> filterPrefix(UUID key, FieldSpec filterKey, String prefix, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
         return filterPrefix(key.toString(), filterKey, prefix, pageCount, pageLength, sortKey, reverse);
     }
 
