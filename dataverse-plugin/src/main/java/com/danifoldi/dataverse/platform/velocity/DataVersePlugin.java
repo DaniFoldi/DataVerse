@@ -1,6 +1,5 @@
 package com.danifoldi.dataverse.platform.velocity;
 
-import com.danifoldi.dataverse.DataVerse;
 import com.danifoldi.dataverse.DataverseProvider;
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;

@@ -1,6 +1,5 @@
 package com.danifoldi.dataverse.platform.bungee;
 
-import com.danifoldi.dataverse.DataVerse;
 import com.danifoldi.dataverse.DataverseProvider;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;

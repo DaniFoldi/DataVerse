@@ -3,7 +3,6 @@ package com.danifoldi.dataverse.database.mysql;
 import com.danifoldi.dataverse.data.FieldSpec;
 import com.danifoldi.dataverse.database.DatabaseEngine;
 import com.danifoldi.dataverse.translation.TranslationEngine;
-import com.danifoldi.microbase.util.Pair;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.pool.HikariPool;
 import org.jetbrains.annotations.NotNull;
