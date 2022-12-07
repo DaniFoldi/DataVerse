@@ -116,6 +116,24 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value) {
+
+        return databaseEngine.filterEquals(namespace, instanceSupplier, fieldMap, filterKey, value);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value, int pageCount, int pageLength) {
+
+        return databaseEngine.filterEquals(namespace, instanceSupplier, fieldMap, filterKey, value, pageCount, pageLength);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+
+        return databaseEngine.filterEquals(namespace, instanceSupplier, fieldMap, filterKey, value, pageCount, pageLength, sortKey, reverse);
+    }
+
+    @Override
     public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(FieldSpec filterKey, BigDecimal cutoff) {
 
         return databaseEngine.filterMax(namespace, instanceSupplier, fieldMap, filterKey, cutoff);
@@ -187,6 +205,12 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
     }
 
     @Override
+    public @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, String value) {
+
+        return databaseEngine.countFilterEquals(namespace, filterKey, value);
+    }
+
+    @Override
     public @NotNull CompletableFuture<@NotNull Long> countFilterMax(FieldSpec filterKey, BigDecimal cutoff) {
 
         return databaseEngine.countFilterMax(namespace, filterKey, cutoff);
@@ -217,6 +241,11 @@ public class MySQLDataVerse<T> extends NamespacedDataVerse<T> {
     @Override
     public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
         return databaseEngine.sumFilterEquals(namespace, sumKey, filterKey, cutoff);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec sumKey, FieldSpec filterKey, String value) {
+        return databaseEngine.sumFilterEquals(namespace, sumKey, filterKey, value);
     }
 
     @Override

@@ -86,7 +86,7 @@ public abstract class NamespacedMultiDataVerse<T> extends FieldMappable<T> {
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength);
 
     public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength) {
-        return filterEquals(key.toString(), filterKey, cutoff,pageCount, pageLength);
+        return filterEquals(key.toString(), filterKey, cutoff, pageCount, pageLength);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
@@ -95,6 +95,30 @@ public abstract class NamespacedMultiDataVerse<T> extends FieldMappable<T> {
 
     public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, BigDecimal cutoff, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
         return filterEquals(key.toString(), filterKey, cutoff, pageCount, pageLength, sortKey, reverse);
+    }
+
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value);
+
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value);
+
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, String value) {
+        return filterEquals(key.toString(), filterKey, value);
+    }
+
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value, int pageCount, int pageLength);
+
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength);
+
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, String value, int pageCount, int pageLength) {
+        return filterEquals(key.toString(), filterKey, value, pageCount, pageLength);
+    }
+
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+
+    public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(String key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse);
+
+    public @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterEquals(UUID key, FieldSpec filterKey, String value, int pageCount, int pageLength, FieldSpec sortKey, boolean reverse) {
+        return filterEquals(key.toString(), filterKey, value, pageCount, pageLength, sortKey, reverse);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull List<@NotNull Pair<@NotNull String, @NotNull T>>> filterMax(FieldSpec filterKey, BigDecimal cutoff);
@@ -193,6 +217,14 @@ public abstract class NamespacedMultiDataVerse<T> extends FieldMappable<T> {
         return countFilterEquals(key.toString(), filterKey, cutoff);
     }
 
+    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterEquals(FieldSpec filterKey, String value);
+
+    public abstract @NotNull CompletableFuture<@NotNull Long> countFilterEquals(String key, FieldSpec filterKey, String value);
+
+    public @NotNull CompletableFuture<@NotNull Long> countFilterEquals(UUID key, FieldSpec filterKey, String value) {
+        return countFilterEquals(key.toString(), filterKey, value);
+    }
+
     public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMax(FieldSpec filterKey, BigDecimal cutoff);
 
     public abstract @NotNull CompletableFuture<@NotNull Long> countFilterMax(String key, FieldSpec filterKey, BigDecimal cutoff);
@@ -241,6 +273,14 @@ public abstract class NamespacedMultiDataVerse<T> extends FieldMappable<T> {
         return countDistinctFilterEquals(key.toString(), filterKey, cutoff);
     }
 
+    public abstract @NotNull CompletableFuture<@NotNull Long> countDistinctFilterEquals(FieldSpec filterKey, String value);
+
+    public abstract @NotNull CompletableFuture<@NotNull Long> countDistinctFilterEquals(String key, FieldSpec filterKey, String value);
+
+    public @NotNull CompletableFuture<@NotNull Long> countDistinctFilterEquals(UUID key, FieldSpec filterKey, String value) {
+        return countDistinctFilterEquals(key.toString(), filterKey, value);
+    }
+
     public abstract @NotNull CompletableFuture<@NotNull Long> countDistinctFilterMax(FieldSpec filterKey, BigDecimal cutoff);
 
     public abstract @NotNull CompletableFuture<@NotNull Long> countDistinctFilterMax(String key, FieldSpec filterKey, BigDecimal cutoff);
@@ -287,6 +327,14 @@ public abstract class NamespacedMultiDataVerse<T> extends FieldMappable<T> {
 
     public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(UUID key, FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff) {
         return sumFilterEquals(key.toString(), sumKey, filterKey, cutoff);
+    }
+
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(FieldSpec sumKey, FieldSpec filterKey, String value);
+
+    public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(String key, FieldSpec sumKey, FieldSpec filterKey, String value);
+
+    public @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterEquals(UUID key, FieldSpec sumKey, FieldSpec filterKey, String value) {
+        return sumFilterEquals(key.toString(), sumKey, filterKey, value);
     }
 
     public abstract @NotNull CompletableFuture<@NotNull BigDecimal> sumFilterMax(FieldSpec sumKey, FieldSpec filterKey, BigDecimal cutoff);
