@@ -1005,9 +1005,9 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T value = instanceSupplier.get();
-                    setResultValues(results, value, fieldMap);
-                    values.add(value);
+                    T v = instanceSupplier.get();
+                    setResultValues(results, v, fieldMap);
+                    values.add(v);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1101,9 +1101,9 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T value = instanceSupplier.get();
-                    setResultValues(results, value, fieldMap);
-                    values.add(value);
+                    T v = instanceSupplier.get();
+                    setResultValues(results, v, fieldMap);
+                    values.add(v);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1207,9 +1207,9 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T value = instanceSupplier.get();
-                    setResultValues(results, value, fieldMap);
-                    values.add(value);
+                    T v = instanceSupplier.get();
+                    setResultValues(results, v, fieldMap);
+                    values.add(v);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1585,9 +1585,9 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T value = instanceSupplier.get();
-                    setResultValues(results, value, fieldMap);
-                    values.add(value);
+                    T v = instanceSupplier.get();
+                    setResultValues(results, v, fieldMap);
+                    values.add(v);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1681,9 +1681,9 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T value = instanceSupplier.get();
-                    setResultValues(results, value, fieldMap);
-                    values.add(value);
+                    T v = instanceSupplier.get();
+                    setResultValues(results, v, fieldMap);
+                    values.add(v);
                 }
                 return values;
             } catch (SQLException e) {
@@ -1787,9 +1787,9 @@ public class MySQLDatabaseEngine extends SQLOperations {
                 List<T> values = new ArrayList<>();
                 while (results.next()) {
 
-                    T value = instanceSupplier.get();
-                    setResultValues(results, value, fieldMap);
-                    values.add(value);
+                    T v = instanceSupplier.get();
+                    setResultValues(results, v, fieldMap);
+                    values.add(v);
                 }
                 return values;
             } catch (SQLException e) {
