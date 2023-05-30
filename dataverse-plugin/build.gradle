@@ -31,22 +31,22 @@ dependencies {
 
     // internal libraries
     implementation 'com.danifoldi:DML:1.0.2'
-    implementation 'com.danifoldi:microbase:0.6.0'
+    implementation 'com.danifoldi:microbase:0.7.1'
 
     // db connectors
     implementation ('com.zaxxer:HikariCP:5.0.1') {
         exclude module: 'slf4j-api'
     }
-    implementation ('org.mariadb.jdbc:mariadb-java-client:3.1.0') {
+    implementation ('org.mariadb.jdbc:mariadb-java-client:3.1.4') {
         exclude module: 'checker-qual'
         exclude module: 'jcl-over-slf4j'
         exclude module: 'slf4j-api'
     }
-    implementation 'org.mongodb:mongo-java-driver:3.12.11'
-    implementation 'mysql:mysql-connector-java:8.0.31'
+    implementation 'org.mongodb:mongo-java-driver:3.12.13'
+    implementation 'mysql:mysql-connector-java:8.0.33'
 
     // intellij
-    compileOnly 'org.jetbrains:annotations:23.0.0'
+    compileOnly 'org.jetbrains:annotations:23.1.0'
 }
 
 processResources {
