@@ -46,7 +46,7 @@ dependencies {
     implementation 'mysql:mysql-connector-java:8.0.33'
 
     // intellij
-    compileOnly 'org.jetbrains:annotations:23.1.0'
+    compileOnly 'org.jetbrains:annotations:24.0.1'
 }
 
 processResources {
